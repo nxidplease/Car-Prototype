@@ -7,10 +7,10 @@ func applySpringImpulseOnWheel(wheel: RayCast, state):
 #	state.add_force(wheel.getSpringForce(), wheel.translation)
 	
 func _integrate_forces(state):
-	applySpringImpulseOnWheel($RayCast, state)
-	applySpringImpulseOnWheel($RayCast2, state)
-	applySpringImpulseOnWheel($RayCast3, state)
-	applySpringImpulseOnWheel($RayCast4, state)
+	applySpringImpulseOnWheel($FR, state)
+	applySpringImpulseOnWheel($RR, state)
+	applySpringImpulseOnWheel($RL, state)
+	applySpringImpulseOnWheel($FL, state)
 
 
 func _on_RayCast_update_offset(offset, force_mag, spring_force, dampening_force):

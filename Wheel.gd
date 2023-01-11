@@ -4,6 +4,7 @@ export(float) var spring_strength = 2
 export var default_dist_from_groud = 0.25
 export var damping_strength = 0.5
 export(NodePath) var car_body_path
+export var tyre_radius = 0.2
 
 var curr_offset = 0
 var spring_force = 0
@@ -15,6 +16,7 @@ onready var car_body: RigidBody = get_node(car_body_path)
 
 func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	var localCollisionPoint = car_body.to_local(collisionPoint)
+	$Tyre.translation = to_local(collisionPoint) + transform.basis.y*tyre_radius
 	var distance = translation.distance_to(localCollisionPoint)
 	curr_offset = default_dist_from_groud - distance
 	
