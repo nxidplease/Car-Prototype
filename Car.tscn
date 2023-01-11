@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Car.gd" type="Script" id=1]
 [ext_resource path="res://Wheel.gd" type="Script" id=2]
@@ -13,6 +13,11 @@ roughness = 0.31
 [sub_resource type="BoxShape" id=3]
 extents = Vector3( 0.5, 0.25, 1 )
 
+[sub_resource type="CylinderMesh" id=4]
+top_radius = 0.2
+bottom_radius = 0.2
+height = 0.1
+
 [node name="Body" type="RigidBody"]
 mass = 10.0
 script = ExtResource( 1 )
@@ -24,7 +29,7 @@ material/0 = SubResource( 2 )
 [node name="CollisionShape" type="CollisionShape" parent="."]
 shape = SubResource( 3 )
 
-[node name="RayCast" type="RayCast" parent="."]
+[node name="FR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.125, -1 )
 enabled = true
 cast_to = Vector3( 0, -0.5, 0 )
@@ -35,7 +40,11 @@ default_dist_from_groud = 0.5
 damping_strength = 25.0
 car_body_path = NodePath("..")
 
-[node name="RayCast2" type="RayCast" parent="."]
+[node name="Tyre" type="MeshInstance" parent="FR"]
+transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+mesh = SubResource( 4 )
+
+[node name="RR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.125, 1 )
 enabled = true
 cast_to = Vector3( 0, -0.5, 0 )
@@ -46,7 +55,11 @@ default_dist_from_groud = 0.5
 damping_strength = 25.0
 car_body_path = NodePath("..")
 
-[node name="RayCast3" type="RayCast" parent="."]
+[node name="Tyre" type="MeshInstance" parent="RR"]
+transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+mesh = SubResource( 4 )
+
+[node name="RL" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.125, 1 )
 enabled = true
 cast_to = Vector3( 0, -0.5, 0 )
@@ -57,7 +70,11 @@ default_dist_from_groud = 0.5
 damping_strength = 25.0
 car_body_path = NodePath("..")
 
-[node name="RayCast4" type="RayCast" parent="."]
+[node name="Tyre" type="MeshInstance" parent="RL"]
+transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+mesh = SubResource( 4 )
+
+[node name="FL" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.125, -1 )
 enabled = true
 cast_to = Vector3( 0, -0.5, 0 )
@@ -68,7 +85,11 @@ default_dist_from_groud = 0.5
 damping_strength = 25.0
 car_body_path = NodePath("..")
 
-[connection signal="update_offset" from="RayCast" to="." method="_on_RayCast_update_offset"]
-[connection signal="update_offset" from="RayCast2" to="." method="_on_RayCast2_update_offset"]
-[connection signal="update_offset" from="RayCast3" to="." method="_on_RayCast3_update_offset"]
-[connection signal="update_offset" from="RayCast4" to="." method="_on_RayCast4_update_offset"]
+[node name="Tyre" type="MeshInstance" parent="FL"]
+transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+mesh = SubResource( 4 )
+
+[connection signal="update_offset" from="FR" to="." method="_on_RayCast_update_offset"]
+[connection signal="update_offset" from="RR" to="." method="_on_RayCast2_update_offset"]
+[connection signal="update_offset" from="RL" to="." method="_on_RayCast3_update_offset"]
+[connection signal="update_offset" from="FL" to="." method="_on_RayCast4_update_offset"]
