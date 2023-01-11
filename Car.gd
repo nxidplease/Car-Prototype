@@ -2,6 +2,8 @@ extends RigidBody
 
 signal update_offset
 
+export(Curve) var engineForceCurve
+
 func applySpringImpulseOnWheel(wheel: RayCast, state):
 	state.add_force(wheel.getSpringForce(), state.transform.basis.xform(wheel.translation))
 #	state.add_force(wheel.getSpringForce(), wheel.translation)
