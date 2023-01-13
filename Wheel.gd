@@ -14,9 +14,10 @@ signal update_offset
 
 onready var car_body: RigidBody = get_node(car_body_path)
 
+class_name Wheel
+
 func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	var localCollisionPoint = car_body.to_local(collisionPoint)
-	$Tyre.translation = to_local(collisionPoint) + transform.basis.y*tyre_radius
 	var distance = translation.distance_to(localCollisionPoint)
 	curr_offset = default_dist_from_groud - distance
 	
@@ -46,7 +47,17 @@ func get_spring_force_at_wheel(collisionPoint: Vector3):
 	
 func getSpringForce():
 	if is_colliding():
-		return get_spring_force_at_wheel(get_collision_point())
+		var collisionPoint = get_collision_point()
+		$Tyre.translation = to_local(collisionPoint) + transform.basis.y*tyre_radius
+		return get_spring_force_at_wheel(collisionPoint)
 	
+	else:
+		$Tyre.translation = cast_to
+		return Vector3.ZERO
+		
+func getProjectedOnGround(direction: Vector3):
+	if is_colliding():
+		var collision_normal = get_collision_normal()
+		return direction - direction.dot(collision_normal) * collision_normal
 	else:
 		return Vector3.ZERO

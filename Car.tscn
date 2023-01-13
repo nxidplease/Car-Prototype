@@ -43,6 +43,7 @@ car_body_path = NodePath("..")
 [node name="Tyre" type="MeshInstance" parent="FR"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
 mesh = SubResource( 4 )
+material/0 = null
 
 [node name="RR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.125, 1 )
@@ -58,6 +59,7 @@ car_body_path = NodePath("..")
 [node name="Tyre" type="MeshInstance" parent="RR"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
 mesh = SubResource( 4 )
+material/0 = null
 
 [node name="RL" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.125, 1 )
@@ -73,6 +75,7 @@ car_body_path = NodePath("..")
 [node name="Tyre" type="MeshInstance" parent="RL"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
 mesh = SubResource( 4 )
+material/0 = null
 
 [node name="FL" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.125, -1 )
@@ -88,6 +91,7 @@ car_body_path = NodePath("..")
 [node name="Tyre" type="MeshInstance" parent="FL"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
 mesh = SubResource( 4 )
+material/0 = null
 
 [connection signal="update_offset" from="FR" to="." method="_on_RayCast_update_offset"]
 [connection signal="update_offset" from="RR" to="." method="_on_RayCast2_update_offset"]

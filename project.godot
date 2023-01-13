@@ -8,6 +8,16 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "RayCast",
+"class": "Wheel",
+"language": "GDScript",
+"path": "res://Wheel.gd"
+} ]
+_global_script_class_icons={
+"Wheel": ""
+}
+
 [application]
 
 config/name="Car Prototype"
