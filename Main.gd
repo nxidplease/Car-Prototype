@@ -2,20 +2,31 @@ extends Node
 
 const offset_str = "%s Offset: %f Force: %f Spring: %f Damp: %f"
 
-var prev_time = 0
+var prev_RR_time = 0
+var prev_FR_time = 0
 
 func _on_Car_update_offset(wheel, offset, force_mag, spring_force, dampening_force):
 	match wheel:
 		"FR":
 			$UI/FR_offset.text = offset_str % ["FR", offset, force_mag, spring_force, dampening_force]
 			
+#			print("Front: %f" % force_mag)
+			
 			var curr_msec = OS.get_ticks_msec()
-			if curr_msec - prev_time >= 200:
-				$UI/FR_Spring_Force.add_point(Vector2(OS.get_ticks_msec() / 200 * 1024 / 30, 600 - spring_force / 5 * 20))
-				print($UI/FR_Spring_Force.get_point_count())
-				prev_time = curr_msec
+			if curr_msec - prev_FR_time >= 200:
+				$UI/FR_Spring_Force.add_point(Vector2(curr_msec / 200.0 * 1024 / 30, 600 - spring_force / 5 * 20))
+#				print($UI/FR_Spring_Force.position.x)
+				prev_FR_time = curr_msec
 		"RR":
 			$UI/RR_offset.text = offset_str % ["RR", offset, force_mag, spring_force, dampening_force]
+			
+#			print("Rear: %f\n" % force_mag)
+			
+			var curr_msec = OS.get_ticks_msec()
+			if curr_msec - prev_RR_time >= 200:
+				$UI/RR_Spring_Force.add_point(Vector2(curr_msec / 200.0 * 1024 / 30, 600 - spring_force / 5 * 20))
+#				print($UI/FR_Spring_Force.position.x)
+				prev_RR_time = curr_msec
 		"RL":
 			$UI/RL_offset.text = offset_str % ["RL", offset, force_mag, spring_force, dampening_force]
 		"FL":
@@ -24,9 +35,19 @@ func _on_Car_update_offset(wheel, offset, force_mag, spring_force, dampening_for
 func _physics_process(_delta):
 	$UI/Speed.text = "Speed: %f" % $Car.linear_velocity.length()
 	$UI/Braking.text = "Braking: %s" % $Car.braking
-	$UI/Engine.text = "Engine: %s" % $Car.engineForce
+	$UI/Engine.text = "Engine: %s %s %s %s" % $Car.engineForce
+	$UI/Brake.text = "Brake: %s %s %s %s" % $Car.brakeForce
+	$UI/RR_force.text = "RR force: %s %s %s %s" % $Car.rrForce
+	_control_car()
+	$UI/FR_Spring_Force.position.x = -OS.get_ticks_msec() / 1000.0 * 1024 / 30
+	$UI/RR_Spring_Force.position.x = -OS.get_ticks_msec() / 1000.0 * 1024 / 30
+	
+func _control_car():
 	$Car.accelerating = Input.is_action_pressed("ui_up")
 	$Car.braking = Input.is_action_pressed("ui_down")
+	$Car.steer_left = Input.is_action_pressed("ui_left")
+	$Car.steer_right = Input.is_action_pressed("ui_right")
+	
 
 func _unhandled_input(event):
 	if event.is_action_pressed("ui_accept"):

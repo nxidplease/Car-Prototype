@@ -1,5 +1,7 @@
 extends RigidBody
 
+class_name Car
+
 signal update_offset
 
 export(Curve) var engineForceCurve: Curve
@@ -12,55 +14,105 @@ export(float) var rr_coefficient = 0.01
 
 export(float) var brake_coefficient = 1
 
-var engineForce = Vector3.ZERO
-var rrForce = Vector3.ZERO
-var brakeForce = Vector3.ZERO
+export(float) var steering_speed = deg2rad(20)
+
+export(float) var max_steering_angle = deg2rad(65)
+
+onready var wheels = [$FR, $FL, $RR, $RL]
+
+var engineForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
+var rrForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
+var brakeForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 var accelerating: bool = false
 var braking: bool = false
+var steer_left: bool = false
+var steer_right: bool = false
 	
-func applyWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
-	var transformedWheelPos = state.transform.basis.xform(wheel.translation)
-	state.add_force(wheel.getSpringForce(), transformedWheelPos)
-	state.add_force(calcEngineForce(wheel, state), transformedWheelPos)
-	state.add_force(calcRRForce(wheel, state), transformedWheelPos)
-	state.add_force(brakeForce, transformedWheelPos)
+func applyWheelForces(wheel: Wheel, state: PhysicsDirectBodyState, totalForce: Vector3):
+	# actually this is the base of the ray case, the point at which the spring connects to the car body
+#	wheel.force_raycast_update()
+	var wheelLocation = state.transform.basis.xform(wheel.get_wheel_body_space_location())
+	
+#	state.apply_impulse(wheelLocation, totalForce * state.step)
+	state.add_force(totalForce, wheelLocation)
+	
 	
 func _integrate_forces(state: PhysicsDirectBodyState):
-	applyWheelForces($FR, state)
-	applyWheelForces($RR, state)
-	applyWheelForces($RL, state)
-	applyWheelForces($FL, state)
-	var forwardLinearVel = state.transform.basis.z.dot(state.linear_velocity) * state.transform.basis.z
-	var groundVel
-	var currSpeed = forwardLinearVel.length()
-		
-	if currSpeed > 0:
-		rrForce = -rr_coefficient * forwardLinearVel / state.step * (mass / 4) 
-		
-		if braking:
-			brakeForce = - brake_coefficient * forwardLinearVel / state.step * (mass / 4)
-			
-	if !braking:
-		brakeForce = Vector3.ZERO
+	_steer_wheels(state)
+	var wheelForces = []
+	wheelForces.resize(4)
+	
+	for i in range(4):
+		wheelForces[i] = calcTotalWheelForces(wheels[i], state)
+	
+	for i in range(4):
+		applyWheelForces(wheels[i], state, wheelForces[i])
+	
+#	print(state.angular_velocity)
+
+func _steer_wheels(state: PhysicsDirectBodyState):
+	if steer_right:
+		_rotate_front_wheels(state, -steering_speed)
+	
+	elif steer_left:
+		_rotate_front_wheels(state, steering_speed)
+	
+func _rotate_front_wheels(state: PhysicsDirectBodyState, rotateSpeed: float):
+	for i in range(2):
+		var wheel = wheels[i]
+		wheel.rotate(wheel.transform.basis.y, rotateSpeed * state.step)
+	
+func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
+	var totalForce = calcRRForce(wheel, state) + \
+		calcBrakingForce(wheel, state) + \
+		wheel.getSpringForce() + \
+		calcEngineForce(wheel, state) + \
+		calcSteerForce(wheel, state)
+	
+#	RWD
+#	match wheel.name:
+#		"RR", "RL":
+#			totalForce += calcEngineForce(wheel, state)
+	
+	return totalForce
+	
+func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
+	
+	if !wheel.is_colliding():
+		return Vector3.ZERO
+	
+	var ws_wheel_location = to_global(wheel.get_wheel_body_space_location())
+	var velocity_at_wheel = get_point_velocity(ws_wheel_location)
+	var ground_vel_at_wheel = velocity_at_wheel - velocity_at_wheel.project(Vector3.UP)
+	
+	print(ground_vel_at_wheel)
+	
+#	var tire_forward_vel = ground_vel_at_wheel.project(wheel.transform.basis.z)
+	var tire_side_vel = ground_vel_at_wheel.project(transform.basis.xform(wheel.transform.basis.x))
+	
+	var tire_mass = mass * 0.05
+	
+	var steer_force = -tire_side_vel * tire_mass / state.step
+	
+	return steer_force
 	
 func calcEngineForce(wheel: Wheel, state: PhysicsDirectBodyState):
-	var forwardGroundDir = wheel.getProjectedOnGround(state.transform.basis.z)
-	var forwardLinearVel = state.transform.basis.z.dot(state.linear_velocity) * state.transform.basis.z
-	var forwardGroundSpeed = wheel.getProjectedOnGround(forwardLinearVel)
+	var forwardGroundDir = wheel.getProjectedOnGround(transform.basis.xform(wheel.transform.basis.z))
+	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
 	var currSpeed = forwardGroundSpeed.length()
+	var engForce = Vector3.ZERO
 	
 	if accelerating && currSpeed < maxSpeed:
 		var normalizedSpeed = currSpeed / maxSpeed
 		var acceleration = engineForceCurve.interpolate(normalizedSpeed) * maxEngineForce * state.step
-		return forwardGroundDir * acceleration / (mass * 4)
+		engForce = forwardGroundDir * acceleration / (mass * 4)
+		
+	updateWheelForceDisplay(wheel.name, engineForce, engForce)
 			
-	else:
-		return Vector3.ZERO
+	return engForce
 		
 func calcRRForce(wheel: Wheel, state: PhysicsDirectBodyState):
-	var forwardGroundDir = wheel.getProjectedOnGround(state.transform.basis.z)
-	var forwardLinearVel = state.transform.basis.z.dot(state.linear_velocity) * state.transform.basis.z
-	var forwardGroundSpeed = wheel.getProjectedOnGround(forwardLinearVel)
+	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
 	var currSpeed = forwardGroundSpeed.length()
 		
 	if currSpeed > 0 && wheel.is_colliding():
@@ -69,16 +121,35 @@ func calcRRForce(wheel: Wheel, state: PhysicsDirectBodyState):
 		return Vector3.ZERO
 		
 func calcBrakingForce(wheel: Wheel, state: PhysicsDirectBodyState):
-	var forwardGroundDir = wheel.getProjectedOnGround(state.transform.basis.z)
-	var forwardLinearVel = state.transform.basis.z.dot(state.linear_velocity) * state.transform.basis.z
-	var forwardGroundSpeed = wheel.getProjectedOnGround(forwardLinearVel)
+	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
 	var currSpeed = forwardGroundSpeed.length()
+	var brakeForce = Vector3.ZERO
 		
 	if currSpeed > 0 && braking:
-		brakeForce = - brake_coefficient * forwardGroundSpeed / state.step * (mass / 4)
+		brakeForce = - brake_coefficient * forwardGroundSpeed * (mass / 4)
+	
+	updateWheelForceDisplay(wheel.name, self.brakeForce, brakeForce)
+		
+	return brakeForce
+	
+## point must be in world space since car_body.transformation.origin is in world space
+func get_point_velocity (point :Vector3)->Vector3:
+	return linear_velocity + angular_velocity.cross(point - transform.origin)	
+		
+func updateWheelForceDisplay(wheelName: String, forceArr: Array, value: Vector3):
+	
+	match wheelName:
+		"FR":
+			forceArr[0] = value
+		"RR":
+			forceArr[1] = value
+		"RL":
+			forceArr[2] = value
+		"FL":
+			forceArr[3] = value
 			
-	elif !braking:
-		brakeForce = Vector3.ZERO
+
+	
 
 func _on_RayCast_update_offset(offset, force_mag, spring_force, dampening_force):
 	emit_signal("update_offset", "FR", offset, force_mag, spring_force, dampening_force)

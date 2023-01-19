@@ -9,12 +9,18 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "RigidBody",
+"class": "Car",
+"language": "GDScript",
+"path": "res://Car.gd"
+}, {
 "base": "RayCast",
 "class": "Wheel",
 "language": "GDScript",
 "path": "res://Wheel.gd"
 } ]
 _global_script_class_icons={
+"Car": "",
 "Wheel": ""
 }
 

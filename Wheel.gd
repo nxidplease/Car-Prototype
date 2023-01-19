@@ -21,19 +21,21 @@ func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	var distance = translation.distance_to(localCollisionPoint)
 	curr_offset = default_dist_from_groud - distance
 	
-	var velocity_to_offset_func = global_transform.basis.y.dot(get_point_velocity(localCollisionPoint))
+#	print("%f, %f" % [get_point_velocity(localCollisionPoint).length(), transform.basis.y.dot(get_point_velocity(localCollisionPoint))])
 	
-	dampening_force = -velocity_to_offset_func * damping_strength
+	var point_vel = car_body.get_point_velocity(collisionPoint)
+#	print(point_vel)
+	var velocity_to_offset = transform.basis.y.dot(point_vel)
+#	var velocity_to_offset = get_collision_normal().dot(point_vel)
+	
+	dampening_force = -velocity_to_offset * damping_strength
 	spring_force = spring_strength * curr_offset
 	
 	if curr_offset < 0:
 		return 0
-		
 	
 	return spring_force + dampening_force
-	
-func get_point_velocity (point :Vector3)->Vector3:
-	return car_body.linear_velocity + car_body.angular_velocity.cross(point - car_body.transform.origin)	
+#	return spring_force
 	
 func get_spring_force_at_wheel(collisionPoint: Vector3):
 	var force_mag = calc_spring_force_for_wheel(collisionPoint)
@@ -42,18 +44,31 @@ func get_spring_force_at_wheel(collisionPoint: Vector3):
 	emit_signal("update_offset", curr_offset, force_mag, spring_force, dampening_force)
 	
 	# Consider using collision normal instead of local UP vector
-#	return force_mag * global_transform.basis.y
-	return force_mag * get_collision_normal()
+	return force_mag * global_transform.basis.y
+#	return force_mag * get_collision_normal()
 	
 func getSpringForce():
 	if is_colliding():
 		var collisionPoint = get_collision_point()
-		$Tyre.translation = to_local(collisionPoint) + transform.basis.y*tyre_radius
+#		print(to_local(collisionPoint))
+#		$Tyre.translation = to_local(collisionPoint) + transform.basis.y*tyre_radius
 		return get_spring_force_at_wheel(collisionPoint)
 	
 	else:
-		$Tyre.translation = cast_to
+#		$Tyre.translation = -transform.basis.y * default_dist_from_groud
 		return Vector3.ZERO
+		
+func get_wheel_body_space_location() -> Vector3:
+	return transform * $Tyre.translation
+	
+func _process(_delta):
+	force_raycast_update()
+	force_update_transform()
+	if is_colliding():
+		$Tyre.translation = to_local(get_collision_point()) + transform.basis.y*tyre_radius
+	else:
+		$Tyre.translation = -transform.basis.y * default_dist_from_groud
+	
 		
 func getProjectedOnGround(direction: Vector3):
 	if is_colliding():
