@@ -14,11 +14,16 @@ export(float) var rr_coefficient = 0.01
 
 export(float) var brake_coefficient = 1
 
-export(float) var steering_speed = deg2rad(20)
+export(float) var steering_speed_deg = 20
 
-export(float) var max_steering_angle = deg2rad(65)
+export(float) var max_steering_angle_deg = 65
+
+export(float) var max_steer_force = 30.0
 
 onready var wheels = [$FR, $FL, $RR, $RL]
+
+onready var steering_speed_rad = deg2rad(steering_speed_deg)
+onready var max_steering_angle_rad = deg2rad(max_steering_angle_deg)
 
 var engineForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 var rrForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
@@ -52,10 +57,10 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 
 func _steer_wheels(state: PhysicsDirectBodyState):
 	if steer_right:
-		_rotate_front_wheels(state, -steering_speed)
+		_rotate_front_wheels(state, -steering_speed_rad)
 	
 	elif steer_left:
-		_rotate_front_wheels(state, steering_speed)
+		_rotate_front_wheels(state, steering_speed_rad)
 	
 func _rotate_front_wheels(state: PhysicsDirectBodyState, rotateSpeed: float):
 	for i in range(2):
@@ -66,13 +71,13 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	var totalForce = calcRRForce(wheel, state) + \
 		calcBrakingForce(wheel, state) + \
 		wheel.getSpringForce() + \
-		calcEngineForce(wheel, state) + \
 		calcSteerForce(wheel, state)
+#		calcEngineForce(wheel, state) + \
 	
 #	RWD
-#	match wheel.name:
-#		"RR", "RL":
-#			totalForce += calcEngineForce(wheel, state)
+	match wheel.name:
+		"RR", "RL":
+			totalForce += calcEngineForce(wheel, state)
 	
 	return totalForce
 	
@@ -85,14 +90,22 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	var velocity_at_wheel = get_point_velocity(ws_wheel_location)
 	var ground_vel_at_wheel = velocity_at_wheel - velocity_at_wheel.project(Vector3.UP)
 	
-	print(ground_vel_at_wheel)
+#	print(ground_vel_at_wheel)
 	
 #	var tire_forward_vel = ground_vel_at_wheel.project(wheel.transform.basis.z)
 	var tire_side_vel = ground_vel_at_wheel.project(transform.basis.xform(wheel.transform.basis.x))
 	
 	var tire_mass = mass * 0.05
 	
-	var steer_force = -tire_side_vel * tire_mass / state.step
+	var steer_force: Vector3 = -tire_side_vel * tire_mass / state.step
+	
+	match wheel.name:
+		"RR", "RL":
+			steer_force *= 0.6
+	
+	steer_force = steer_force.limit_length(max_steer_force)
+	
+	print(steer_force.length())
 	
 	return steer_force
 	

@@ -37,7 +37,6 @@ collision_mask = 3
 
 [node name="MeshInstance" type="MeshInstance" parent="Ground"]
 mesh = SubResource( 2 )
-material/0 = null
 
 [node name="CollisionShape" type="CollisionShape" parent="Ground"]
 shape = SubResource( 3 )
@@ -50,10 +49,12 @@ shadow_enabled = true
 [node name="Car" parent="." instance=ExtResource( 1 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.70556, -498.17 )
 engineForceCurve = SubResource( 4 )
-maxSpeed = 15
-maxEngineForce = 100000
+maxSpeed = 30
+maxEngineForce = 200000
 rr_coefficient = 0.005
 brake_coefficient = 0.8
+steering_speed_deg = 65.0
+max_steer_force = 35.0
 
 [node name="Camera" type="Camera" parent="Car"]
 transform = Transform( -3.91864e-08, 0.0259153, -0.999664, -2.77614e-08, 0.999664, 0.0259153, 1, 2.87676e-08, -3.84538e-08, -3.81873, 0.985046, -0.0215454 )
