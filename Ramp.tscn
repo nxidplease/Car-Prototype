@@ -8,6 +8,7 @@ size = Vector3( 5, 2, 2 )
 points = PoolVector3Array( -2.5, 1, 1, 2.5, -1, 1, -2.5, 1, -1, -2.5, -1, 1, 2.5, -1, -1, -2.5, -1, -1 )
 
 [node name="Ramp" type="RigidBody"]
+collision_layer = 4
 mode = 1
 
 [node name="MeshInstance" type="MeshInstance" parent="."]

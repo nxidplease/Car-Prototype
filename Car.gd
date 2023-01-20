@@ -91,12 +91,12 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	var steerForce = calcSteerForce(wheel, state)
 	
 	totalForce += steerForce
-	totalForce += calcEngineForce(wheel, state)
+#	totalForce += calcEngineForce(wheel, state)
 	
 #	RWD
-#	match wheel.name:
-#		"FR", "FL":
-#			totalForce += calcEngineForce(wheel, state)
+	match wheel.name:
+		"RR", "RL":
+			totalForce += calcEngineForce(wheel, state)
 #		"FL", "FR":
 #			applySelfAligningForce(wheel, state, steerForce)
 	
@@ -178,6 +178,12 @@ func calcBrakingForce(wheel: Wheel, state: PhysicsDirectBodyState):
 		
 	if currSpeed > 0 && braking:
 		brakeForce = - brake_coefficient * forwardGroundSpeed * (mass / 4)
+		
+#	match wheel.name:
+#		"FR", "FL":
+#			brakeForce *= 0.3
+#		"RR", "RL":
+#			brakeForce *= 0.7
 	
 	updateWheelForceDisplay(wheel.name, self.brakeForce, brakeForce)
 		

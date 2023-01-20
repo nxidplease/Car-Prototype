@@ -15,7 +15,7 @@ func _process(_delta):
 	
 	var velocity_to_ground_proj = car.linear_velocity - car.linear_velocity.dot(Vector3.UP) * Vector3.UP
 
-	if velocity_to_ground_proj.length() > 0.5:
+	if velocity_to_ground_proj.length() > 1.5:
 		camera_back_dir = velocity_to_ground_proj.normalized()
 	
 #	var car_forward_edge = car.translation + car.transform.basis.z

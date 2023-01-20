@@ -33,7 +33,7 @@ material/0 = SubResource( 2 )
 shape = SubResource( 3 )
 
 [node name="RL" type="RayCast" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -0.85 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
@@ -48,7 +48,7 @@ mesh = SubResource( 4 )
 material/0 = SubResource( 5 )
 
 [node name="FL" type="RayCast" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0.85 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
@@ -62,7 +62,7 @@ transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, -0.5
 mesh = SubResource( 4 )
 
 [node name="FR" type="RayCast" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 0.85 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
@@ -76,7 +76,7 @@ transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, -0.5
 mesh = SubResource( 4 )
 
 [node name="RR" type="RayCast" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, -0.85 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, -0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )

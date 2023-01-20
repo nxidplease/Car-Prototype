@@ -60,7 +60,7 @@ engineForceCurve = SubResource( 4 )
 front_grip_curve = SubResource( 7 )
 rear_grip_curve = SubResource( 8 )
 maxSpeed = 25
-maxEngineForce = 120000
+maxEngineForce = 150000
 rr_coefficient = 0.005
 brake_coefficient = 0.8
 steering_speed_deg = 90.0
@@ -190,6 +190,6 @@ transform = Transform( 0.313516, 0.498367, 0.808293, -0.180222, 0.866966, -0.464
 transform = Transform( -0.174092, -0.021553, 0.984493, -0.287664, 0.957264, -0.0299121, -0.941776, -0.288411, -0.172853, 3.03735, -0.95445, -477.08 )
 
 [node name="Ramp" parent="." instance=ExtResource( 7 )]
-transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -16.8384, 0.5, -471.115 )
+transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -37.0314, 0.5, -425.534 )
 
 [connection signal="update_offset" from="Car" to="." method="_on_Car_update_offset"]
