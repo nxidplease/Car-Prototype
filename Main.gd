@@ -38,6 +38,7 @@ func _physics_process(_delta):
 	$UI/Engine.text = "Engine: %s %s %s %s" % $Car.engineForce
 	$UI/Brake.text = "Brake: %s %s %s %s" % $Car.brakeForce
 	$UI/RR_force.text = "RR force: %s %s %s %s" % $Car.rrForce
+	$"UI/Steering(L\\R)".text = "Steering(L\\R): %f, %f" % $Car.wheelSteerAngle
 	_control_car()
 	$UI/FR_Spring_Force.position.x = -OS.get_ticks_msec() / 1000.0 * 1024 / 30
 	$UI/RR_Spring_Force.position.x = -OS.get_ticks_msec() / 1000.0 * 1024 / 30

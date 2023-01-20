@@ -14,6 +14,9 @@ signal update_offset
 
 onready var car_body: RigidBody = get_node(car_body_path)
 
+# Virtual tire mass
+onready var tyre_mass: float = car_body.mass / 4
+
 class_name Wheel
 
 func calc_spring_force_for_wheel(collisionPoint: Vector3):
@@ -76,3 +79,9 @@ func getProjectedOnGround(direction: Vector3):
 		return direction - direction.dot(collision_normal) * collision_normal
 	else:
 		return Vector3.ZERO
+
+
+## m(h^2 + 3r^2)/12
+func calc_moment_of_inertia() -> float:
+	var cylinder_mesh := $Tyre.mesh as CylinderMesh
+	return (pow(cylinder_mesh.height, 2) + 3 * pow(tyre_radius, 2)) * tyre_mass / 12
