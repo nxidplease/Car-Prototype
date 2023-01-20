@@ -16,11 +16,11 @@ export(int) var maxEngineForce
 
 export(float) var rr_coefficient = 0.01
 
-export(float) var brake_coefficient = 1
+export(float) var brake_coefficient = 1.0
 
-export(float) var steering_speed_deg = 20
+export(float) var steering_speed_deg = 20.0
 
-export(float) var max_steering_angle_deg = 65
+export(float) var max_steering_angle_deg = 65.0
 
 export(float) var max_steer_force = 30.0
 
@@ -95,10 +95,11 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 #	RWD
 	match wheel.name:
-		"RR", "RL":
+#		"RR", "RL":
+		"FL", "FR":
 			totalForce += calcEngineForce(wheel, state)
-#		"FL", "FR":
-#			applySelfAligningForce(wheel, state, steerForce)
+			applySelfAligningForce(wheel, state, steerForce)
+			update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
 	
 	return totalForce
 	
@@ -121,7 +122,7 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 	var side_to_total_vel_ratio = tire_side_vel.length() / ground_vel_at_wheel.length()
 	
-	print("Side slip ration: %f" % side_to_total_vel_ratio)
+#	print("Side slip ration: %f" % side_to_total_vel_ratio)
 	
 	var grip_factor
 	
@@ -131,7 +132,7 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 		"FR", "FL":
 			grip_factor = front_grip_curve.interpolate(side_to_total_vel_ratio)
 	
-#	grip_factor = 1
+	grip_factor = 1.0
 	
 	var steer_force: Vector3 = -tire_side_vel * wheel.tyre_mass * grip_factor / state.step
 	
@@ -145,7 +146,15 @@ func applySelfAligningForce(wheel: Wheel, state: PhysicsDirectBodyState, steer_f
 	
 	if wheel.rotation.y != 0:
 		var rot_accel = -self_aligning_coefficient * steer_force_scalar / wheel.calc_moment_of_inertia()
-		wheel.rotate_object_local(wheel.transform.basis.y, rot_accel * state.step)
+		var rot_change = rot_accel * pow(state.step, 2)
+		var curr_rot = wheel.rotation.y
+		var new_rot = wheel.rotation.y + rot_change
+		
+		# If curr_rot and new_rot have different signs, rotate up to 0 degrees of rotation
+		if sign(new_rot * curr_rot) == -1:
+			rot_change = - wheel.rotation.y
+		
+		wheel.rotate_object_local(wheel.transform.basis.y, rot_change)
 	
 func calcEngineForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	var forwardGroundDir = wheel.getProjectedOnGround(transform.basis.xform(wheel.transform.basis.z))
