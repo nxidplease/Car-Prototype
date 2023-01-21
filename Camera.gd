@@ -13,7 +13,9 @@ func _process(_delta):
 #	project car facing onto ground and normalize(important if car is tilting back/forward
 	var camera_back_dir = (car.transform.basis.z - car.transform.basis.z.dot(Vector3.UP) * Vector3.UP).normalized()
 	
-	var velocity_to_ground_proj = car.linear_velocity - car.linear_velocity.dot(Vector3.UP) * Vector3.UP
+	var velocity_to_ground_proj = car.linear_velocity - car.linear_velocity.project(Vector3.UP)
+	
+#	print(velocity_to_ground_proj.length())
 
 	if velocity_to_ground_proj.length() > 1.5:
 		camera_back_dir = velocity_to_ground_proj.normalized()

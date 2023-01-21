@@ -7,6 +7,8 @@
 [ext_resource path="res://icon.png" type="Texture" id=5]
 [ext_resource path="res://Obstacle.tscn" type="PackedScene" id=6]
 [ext_resource path="res://Ramp.tscn" type="PackedScene" id=7]
+[ext_resource path="res://RearGripCurve.tres" type="Curve" id=8]
+[ext_resource path="res://FrontGripCurve.tres" type="Curve" id=9]
 
 [sub_resource type="SpatialMaterial" id=1]
 albedo_texture = ExtResource( 5 )
@@ -21,12 +23,6 @@ data = PoolVector3Array( -500, 0.5, 500, 500, 0.5, 500, -500, -0.5, 500, 500, 0.
 
 [sub_resource type="Curve" id=4]
 _data = [ Vector2( 0, 0.5 ), 0.0, 0.0, 0, 0, Vector2( 0.406627, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.689759, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.3 ), 0.0, 0.0, 0, 0 ]
-
-[sub_resource type="Curve" id=7]
-_data = [ Vector2( 0, 0.863636 ), 0.0, -0.2, 0, 0, Vector2( 0.4, 0.2 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.2 ), 0.0, 0.0, 1, 0 ]
-
-[sub_resource type="Curve" id=8]
-_data = [ Vector2( 0, 0.545455 ), 0.0, -0.485714, 0, 1, Vector2( 0.336898, 0.381818 ), -0.708333, -0.708333, 0, 0, Vector2( 0.5, 0.2 ), -0.361703, -0.361703, 0, 0, Vector2( 1, 0.1 ), -0.2, 0.0, 1, 0 ]
 
 [sub_resource type="DynamicFont" id=5]
 size = 22
@@ -57,14 +53,14 @@ shadow_enabled = true
 [node name="Car" parent="." instance=ExtResource( 1 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.70556, -498.17 )
 engineForceCurve = SubResource( 4 )
-front_grip_curve = SubResource( 7 )
-rear_grip_curve = SubResource( 8 )
+front_grip_curve = ExtResource( 9 )
+rear_grip_curve = ExtResource( 8 )
 maxSpeed = 25
 maxEngineForce = 150000
 rr_coefficient = 0.005
 brake_coefficient = 0.8
 steering_speed_deg = 90.0
-max_steering_angle_deg = 20.0
+max_steering_angle_deg = 25.0
 
 [node name="Camera" type="Camera" parent="Car"]
 transform = Transform( -3.91864e-08, 0.0259153, -0.999664, -2.77614e-08, 0.999664, 0.0259153, 1, 2.87676e-08, -3.84538e-08, -3.81873, 0.985046, -0.0215454 )
@@ -164,6 +160,14 @@ margin_bottom = 316.0
 custom_colors/font_color = Color( 0, 0, 0, 1 )
 text = "Steering angle(L, R):"
 
+[node name="Heading" type="Label" parent="UI"]
+margin_left = -2.0
+margin_top = 316.0
+margin_right = 219.0
+margin_bottom = 344.0
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+text = "Heading:"
+
 [node name="FR_Spring_Force" type="Line2D" parent="UI"]
 points = PoolVector2Array( 0, 600 )
 width = 2.0
@@ -172,6 +176,11 @@ width = 2.0
 points = PoolVector2Array( 0, 600 )
 width = 2.0
 default_color = Color( 0.4, 1, 0.647059, 1 )
+
+[node name="Self_Aligining" type="Line2D" parent="UI"]
+points = PoolVector2Array( 0, 600 )
+width = 2.0
+default_color = Color( 1, 0.0196078, 0.0196078, 1 )
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.949612, 0.313429, 0, -0.313429, 0.949612, 0, 3.4577, -175.17 )

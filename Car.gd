@@ -48,6 +48,10 @@ func applyWheelForces(wheel: Wheel, state: PhysicsDirectBodyState, totalForce: V
 #	state.apply_impulse(wheelLocation, totalForce * state.step)
 	state.add_force(totalForce, wheelLocation)
 	
+func reset_steering():
+	for i in range(2):
+		wheels[i].rotation.y = 0
+	
 	
 func _integrate_forces(state: PhysicsDirectBodyState):
 	_steer_wheels(state)
@@ -59,8 +63,6 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 	
 	for i in range(4):
 		applyWheelForces(wheels[i], state, wheelForces[i])
-	
-#	print(state.angular_velocity)
 
 func _steer_wheels(state: PhysicsDirectBodyState):
 	if steer_right:
@@ -95,9 +97,9 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 #	RWD
 	match wheel.name:
-#		"RR", "RL":
-		"FL", "FR":
+		"RR", "RL":
 			totalForce += calcEngineForce(wheel, state)
+		"FL", "FR":
 			applySelfAligningForce(wheel, state, steerForce)
 			update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
 	
@@ -115,14 +117,10 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	if ground_vel_at_wheel.length() <= 0:
 		return Vector3.ZERO
 	
-#	print(ground_vel_at_wheel)
-	
 #	var tire_forward_vel = ground_vel_at_wheel.project(wheel.transform.basis.z)
 	var tire_side_vel = ground_vel_at_wheel.project(transform.basis.xform(wheel.transform.basis.x))
 	
 	var side_to_total_vel_ratio = tire_side_vel.length() / ground_vel_at_wheel.length()
-	
-#	print("Side slip ration: %f" % side_to_total_vel_ratio)
 	
 	var grip_factor
 	
@@ -132,7 +130,7 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 		"FR", "FL":
 			grip_factor = front_grip_curve.interpolate(side_to_total_vel_ratio)
 	
-	grip_factor = 1.0
+#	grip_factor = 1.0
 	
 	var steer_force: Vector3 = -tire_side_vel * wheel.tyre_mass * grip_factor / state.step
 	
@@ -148,11 +146,9 @@ func applySelfAligningForce(wheel: Wheel, state: PhysicsDirectBodyState, steer_f
 		var rot_accel = -self_aligning_coefficient * steer_force_scalar / wheel.calc_moment_of_inertia()
 		var rot_change = rot_accel * pow(state.step, 2)
 		var curr_rot = wheel.rotation.y
-		var new_rot = wheel.rotation.y + rot_change
+		rot_change = clamp(rot_change, -max_steering_angle_rad + curr_rot, max_steering_angle_rad - curr_rot)
 		
-		# If curr_rot and new_rot have different signs, rotate up to 0 degrees of rotation
-		if sign(new_rot * curr_rot) == -1:
-			rot_change = - wheel.rotation.y
+		print(rot_change)
 		
 		wheel.rotate_object_local(wheel.transform.basis.y, rot_change)
 	
