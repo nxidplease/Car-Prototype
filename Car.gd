@@ -26,7 +26,27 @@ export(float) var max_steer_force = 30.0
 
 export(float) var self_aligning_coefficient = 0.06
 
+enum Drivetrain {
+	FWD,
+	RWD,
+	AWD
+}
+
+const drivenWheels = {
+	Drivetrain.AWD: ["FR", "FL", "RR", "RL"],
+	Drivetrain.RWD: ["RR", "RL"],
+	Drivetrain.FWD: ["FR", "FL"],
+}
+
+export(Drivetrain) var drivetrain = Drivetrain.RWD
+
 onready var wheels = [$FR, $FL, $RR, $RL]
+const wheelArrIndex = {
+	"FR": 0,
+	"FL": 1,
+	"RR": 2,
+	"RL": 3
+}
 
 onready var steering_speed_rad = deg2rad(steering_speed_deg)
 onready var max_steering_angle_rad = deg2rad(max_steering_angle_deg)
@@ -34,6 +54,7 @@ onready var max_steering_angle_rad = deg2rad(max_steering_angle_deg)
 var engineForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 var rrForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 var brakeForce = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
+var sideSlipRatio = [0, 0, 0, 0]
 var wheelSteerAngle = [0, 0]
 var accelerating: bool = false
 var braking: bool = false
@@ -63,6 +84,8 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 	
 	for i in range(4):
 		applyWheelForces(wheels[i], state, wheelForces[i])
+		
+#	print(linear_velocity.y)
 
 func _steer_wheels(state: PhysicsDirectBodyState):
 	if steer_right:
@@ -94,14 +117,15 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 	totalForce += steerForce
 #	totalForce += calcEngineForce(wheel, state)
-	
-#	RWD
+
 	match wheel.name:
-		"RR", "RL":
-			totalForce += calcEngineForce(wheel, state)
 		"FL", "FR":
 			applySelfAligningForce(wheel, state, steerForce)
 			update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
+			
+	if drivenWheels[drivetrain].has(wheel.name):
+		totalForce += calcEngineForce(wheel, state)
+		
 	
 	return totalForce
 	
@@ -122,6 +146,7 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 	var side_to_total_vel_ratio = tire_side_vel.length() / ground_vel_at_wheel.length()
 	
+	
 	var grip_factor
 	
 	match wheel.name:
@@ -130,6 +155,7 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 		"FR", "FL":
 			grip_factor = front_grip_curve.interpolate(side_to_total_vel_ratio)
 	
+	sideSlipRatio[wheelArrIndex[wheel.name]] = side_to_total_vel_ratio
 #	grip_factor = 1.0
 	
 	var steer_force: Vector3 = -tire_side_vel * wheel.tyre_mass * grip_factor / state.step
@@ -147,8 +173,6 @@ func applySelfAligningForce(wheel: Wheel, state: PhysicsDirectBodyState, steer_f
 		var rot_change = rot_accel * pow(state.step, 2)
 		var curr_rot = wheel.rotation.y
 		rot_change = clamp(rot_change, -max_steering_angle_rad + curr_rot, max_steering_angle_rad - curr_rot)
-		
-		print(rot_change)
 		
 		wheel.rotate_object_local(wheel.transform.basis.y, rot_change)
 	
@@ -217,9 +241,6 @@ func update_wheel_steering_angle(wheelName: String, angle: float):
 			wheelSteerAngle[0] = angle
 		"FR":
 			wheelSteerAngle[1] = angle
-			
-			
-
 	
 
 func _on_RayCast_update_offset(offset, force_mag, spring_force, dampening_force):

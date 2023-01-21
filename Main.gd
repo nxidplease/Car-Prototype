@@ -39,6 +39,7 @@ func _physics_process(_delta):
 	$UI/Engine.text = "Engine: %s %s %s %s" % $Car.engineForce
 	$UI/Brake.text = "Brake: %s %s %s %s" % $Car.brakeForce
 	$UI/RR_force.text = "RR force: %s %s %s %s" % $Car.rrForce
+	$UI/SideSlip.text = "Side slip(FR, FL, RR, RL): %.2f, %.2f, %.2f, %.2f" % $Car.sideSlipRatio
 	$"UI/Steering(L\\R)".text = "Steering(L\\R): %f, %f" % $Car.wheelSteerAngle
 	$UI/Heading.text = "Heading: %f" % rad2deg($Car.global_rotation.y)
 	_control_car()
