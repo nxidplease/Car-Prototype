@@ -24,6 +24,7 @@ export(float) var max_steering_angle_deg = 65.0
 
 export(float) var max_steer_force = 30.0
 
+# Calculated from 6 degree caster angle and 0.03 pneumatic trail
 export(float) var self_aligning_coefficient = 0.06
 
 enum Drivetrain {
@@ -60,6 +61,7 @@ var accelerating: bool = false
 var braking: bool = false
 var steer_left: bool = false
 var steer_right: bool = false
+var is_jumping: bool = false
 	
 func applyWheelForces(wheel: Wheel, state: PhysicsDirectBodyState, totalForce: Vector3):
 	# actually this is the base of the ray case, the point at which the spring connects to the car body
@@ -79,11 +81,23 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 	var wheelForces = []
 	wheelForces.resize(4)
 	
+	var grounded = true
+	
 	for i in range(4):
 		wheelForces[i] = calcTotalWheelForces(wheels[i], state)
+		grounded = grounded && wheels[i].is_colliding()
 	
 	for i in range(4):
 		applyWheelForces(wheels[i], state, wheelForces[i])
+		
+	if is_jumping:
+		state.apply_central_impulse(Vector3.UP * 50)
+		is_jumping = false
+		
+	
+	
+#	if grounded:
+#		add_central_force((transform.basis.z - transform.basis.z.project(Vector3.UP)) * 2500 / mass)
 		
 #	print(linear_velocity.y)
 
@@ -112,6 +126,9 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	var totalForce = calcRRForce(wheel, state) + \
 		calcBrakingForce(wheel, state) + \
 		wheel.getSpringForce()
+
+		
+#	var totalForce = wheel.getSpringForce()
 
 	var steerForce = calcSteerForce(wheel, state)
 	
@@ -165,16 +182,17 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	return steer_force
 	
 func applySelfAligningForce(wheel: Wheel, state: PhysicsDirectBodyState, steer_force: Vector3):
+	# Try using the wheel velocity instead of offset from center
 	var ws_wheel_side_dir = transform.basis.xform(wheel.transform.basis.x)
 	var steer_force_scalar = steer_force.dot(ws_wheel_side_dir)
 	
-	if wheel.rotation.y != 0:
-		var rot_accel = -self_aligning_coefficient * steer_force_scalar / wheel.calc_moment_of_inertia()
-		var rot_change = rot_accel * pow(state.step, 2)
-		var curr_rot = wheel.rotation.y
-		rot_change = clamp(rot_change, -max_steering_angle_rad + curr_rot, max_steering_angle_rad - curr_rot)
+#	if wheel.rotation.y != 0:
+	var rot_accel = -self_aligning_coefficient * steer_force_scalar / wheel.calc_moment_of_inertia()
+	var rot_change = rot_accel * pow(state.step, 2)
+	var curr_rot = wheel.rotation.y
+#		rot_change = clamp(rot_change, -max_steering_angle_rad + curr_rot, max_steering_angle_rad - curr_rot)
 		
-		wheel.rotate_object_local(wheel.transform.basis.y, rot_change)
+	wheel.rotate_object_local(wheel.transform.basis.y, rot_change)
 	
 func calcEngineForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	var forwardGroundDir = wheel.getProjectedOnGround(transform.basis.xform(wheel.transform.basis.z))
@@ -184,7 +202,7 @@ func calcEngineForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 	if accelerating && currSpeed < maxSpeed:
 		var normalizedSpeed = currSpeed / maxSpeed
-		var acceleration = engineForceCurve.interpolate(normalizedSpeed) * maxEngineForce * state.step
+		var acceleration = engineForceCurve.interpolate(normalizedSpeed) * maxEngineForce
 		engForce = forwardGroundDir * acceleration / (mass * 4)
 		
 	updateWheelForceDisplay(wheel.name, engineForce, engForce)
@@ -194,11 +212,16 @@ func calcEngineForce(wheel: Wheel, state: PhysicsDirectBodyState):
 func calcRRForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
 	var currSpeed = forwardGroundSpeed.length()
+	var retVal
 		
 	if currSpeed > 0 && wheel.is_colliding():
-		return -rr_coefficient * forwardGroundSpeed / state.step * (mass / 4) 
+		retVal = -rr_coefficient * forwardGroundSpeed / state.step * (mass / 4) 
 	else:
-		return Vector3.ZERO
+		retVal = Vector3.ZERO
+	
+	#updateWheelForceDisplay(wheel.name, self.rrForce, retVal)
+	
+	return retVal
 		
 func calcBrakingForce(wheel: Wheel, state: PhysicsDirectBodyState):
 	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
@@ -243,17 +266,17 @@ func update_wheel_steering_angle(wheelName: String, angle: float):
 			wheelSteerAngle[1] = angle
 	
 
-func _on_RayCast_update_offset(offset, force_mag, spring_force, dampening_force):
-	emit_signal("update_offset", "FR", offset, force_mag, spring_force, dampening_force)
+func _on_RayCast_update_offset(offset, distance):
+	emit_signal("update_offset", "FR", offset, distance)
 
 
-func _on_RayCast2_update_offset(offset, force_mag, spring_force, dampening_force):
-	emit_signal("update_offset", "RR", offset, force_mag, spring_force, dampening_force)
+func _on_RayCast2_update_offset(offset, distance):
+	emit_signal("update_offset", "RR", offset, distance)
 
 
-func _on_RayCast3_update_offset(offset, force_mag, spring_force, dampening_force):
-	emit_signal("update_offset", "RL", offset, force_mag, spring_force, dampening_force)
+func _on_RayCast3_update_offset(offset, distance):
+	emit_signal("update_offset", "RL", offset, distance)
 
 
-func _on_RayCast4_update_offset(offset, force_mag, spring_force, dampening_force):
-	emit_signal("update_offset", "FL", offset, force_mag, spring_force, dampening_force)
+func _on_RayCast4_update_offset(offset, distance):
+	emit_signal("update_offset", "FL", offset, distance)

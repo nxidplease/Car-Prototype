@@ -36,19 +36,20 @@ func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	
 	if curr_offset < 0:
 		return 0
+		
+	var force_mag = spring_force + dampening_force
 	
-	return spring_force + dampening_force
+	emit_signal("update_offset", curr_offset, distance)
+	
+	return force_mag
 #	return spring_force
 	
 func get_spring_force_at_wheel(collisionPoint: Vector3):
 	var force_mag = calc_spring_force_for_wheel(collisionPoint)
 	
-	
-	emit_signal("update_offset", curr_offset, force_mag, spring_force, dampening_force)
-	
 	# Consider using collision normal instead of local UP vector
 	return force_mag * global_transform.basis.y
-#	return force_mag * get_collision_normal()
+	#return force_mag * get_collision_normal()
 	
 func getSpringForce():
 	if is_colliding():
@@ -76,7 +77,7 @@ func _process(_delta):
 func getProjectedOnGround(direction: Vector3):
 	if is_colliding():
 		var collision_normal = get_collision_normal()
-		return direction - direction.dot(collision_normal) * collision_normal
+		return direction - direction.project(collision_normal)
 	else:
 		return Vector3.ZERO
 

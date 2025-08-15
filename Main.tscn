@@ -13,16 +13,17 @@
 [sub_resource type="SpatialMaterial" id=1]
 albedo_texture = ExtResource( 5 )
 uv1_triplanar = true
+uv1_triplanar_sharpness = 1.0
 
 [sub_resource type="CubeMesh" id=2]
 material = SubResource( 1 )
-size = Vector3( 1000, 1, 1000 )
+size = Vector3( 1000, 5, 1000 )
 
-[sub_resource type="ConcavePolygonShape" id=3]
-data = PoolVector3Array( -500, 0.5, 500, 500, 0.5, 500, -500, -0.5, 500, 500, 0.5, 500, 500, -0.5, 500, -500, -0.5, 500, 500, 0.5, -500, -500, 0.5, -500, 500, -0.5, -500, -500, 0.5, -500, -500, -0.5, -500, 500, -0.5, -500, 500, 0.5, 500, 500, 0.5, -500, 500, -0.5, 500, 500, 0.5, -500, 500, -0.5, -500, 500, -0.5, 500, -500, 0.5, -500, -500, 0.5, 500, -500, -0.5, -500, -500, 0.5, 500, -500, -0.5, 500, -500, -0.5, -500, 500, 0.5, 500, -500, 0.5, 500, 500, 0.5, -500, -500, 0.5, 500, -500, 0.5, -500, 500, 0.5, -500, -500, -0.5, 500, 500, -0.5, 500, -500, -0.5, -500, 500, -0.5, 500, 500, -0.5, -500, -500, -0.5, -500 )
+[sub_resource type="ConcavePolygonShape" id=7]
+data = PoolVector3Array( -500, 2.5, 500, 500, 2.5, 500, -500, -2.5, 500, 500, 2.5, 500, 500, -2.5, 500, -500, -2.5, 500, 500, 2.5, -500, -500, 2.5, -500, 500, -2.5, -500, -500, 2.5, -500, -500, -2.5, -500, 500, -2.5, -500, 500, 2.5, 500, 500, 2.5, -500, 500, -2.5, 500, 500, 2.5, -500, 500, -2.5, -500, 500, -2.5, 500, -500, 2.5, -500, -500, 2.5, 500, -500, -2.5, -500, -500, 2.5, 500, -500, -2.5, 500, -500, -2.5, -500, 500, 2.5, 500, -500, 2.5, 500, 500, 2.5, -500, -500, 2.5, 500, -500, 2.5, -500, 500, 2.5, -500, -500, -2.5, 500, 500, -2.5, 500, -500, -2.5, -500, 500, -2.5, 500, 500, -2.5, -500, -500, -2.5, -500 )
 
 [sub_resource type="Curve" id=4]
-_data = [ Vector2( 0, 0.5 ), 0.0, 0.0, 0, 0, Vector2( 0.406627, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.689759, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.3 ), 0.0, 0.0, 0, 0 ]
+_data = [ Vector2( 0, 0.5 ), 0.0, 0.0, 0, 0, Vector2( 0.173797, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.518717, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.3 ), 0.0, 0.0, 0, 0 ]
 
 [sub_resource type="DynamicFont" id=5]
 size = 22
@@ -42,8 +43,8 @@ collision_mask = 3
 [node name="MeshInstance" type="MeshInstance" parent="Ground"]
 mesh = SubResource( 2 )
 
-[node name="CollisionShape" type="CollisionShape" parent="Ground"]
-shape = SubResource( 3 )
+[node name="CollisionShape2" type="CollisionShape" parent="Ground"]
+shape = SubResource( 7 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.127844, -0.857157, 0.498937, 0, 0.503065, 0.864248, -0.991794, -0.110489, 0.0643137, 8.50783, 5.54741, 0 )
@@ -51,14 +52,13 @@ light_color = Color( 1, 0.960784, 0, 1 )
 shadow_enabled = true
 
 [node name="Car" parent="." instance=ExtResource( 1 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.70556, -498.17 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85481, -498.17 )
 engineForceCurve = SubResource( 4 )
 front_grip_curve = ExtResource( 9 )
 rear_grip_curve = ExtResource( 8 )
 maxSpeed = 25
-maxEngineForce = 150000
+maxEngineForce = 2500
 rr_coefficient = 0.005
-brake_coefficient = 0.8
 steering_speed_deg = 90.0
 max_steering_angle_deg = 25.0
 drivetrain = 0
@@ -138,9 +138,6 @@ margin_right = 102.0
 margin_bottom = 260.0
 custom_colors/font_color = Color( 0, 0, 0, 1 )
 text = "Brake: "
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="RR_force" type="Label" parent="UI"]
 margin_left = 2.0
@@ -199,15 +196,15 @@ car_path = NodePath("../Car")
 back_offset = 4.0
 
 [node name="Obstacle" parent="." instance=ExtResource( 6 )]
-transform = Transform( 0.361625, 0, 0.932324, 0, 1, 0, -0.932324, 0, 0.361625, -0.803162, -1.28367, -481.332 )
+transform = Transform( 0.361625, 0, 0.932324, 0, 1, 0, -0.932324, 0, 0.361625, -6.3145, -0.265923, -481.332 )
 
 [node name="Obstacle2" parent="." instance=ExtResource( 6 )]
-transform = Transform( 0.313516, 0.498367, 0.808293, -0.180222, 0.866966, -0.464639, -0.932324, 0, 0.361625, -8.22008, -1.19954, -477.08 )
+transform = Transform( 0.313516, 0.498367, 0.808293, -0.180222, 0.866966, -0.464639, -0.932324, 0, 0.361625, -8.22008, -0.235006, -477.08 )
 
 [node name="Obstacle3" parent="." instance=ExtResource( 6 )]
-transform = Transform( -0.174092, -0.021553, 0.984493, -0.287664, 0.957264, -0.0299121, -0.941776, -0.288411, -0.172853, 3.03735, -0.95445, -477.08 )
+transform = Transform( -0.174092, -0.021553, 0.984493, -0.287664, 0.957264, -0.0299121, -0.941776, -0.288411, -0.172853, 21.3984, -0.210375, -477.08 )
 
 [node name="Ramp" parent="." instance=ExtResource( 7 )]
-transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -37.0314, 0.5, -425.534 )
+transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -37.0314, 1.5, -425.534 )
 
 [connection signal="update_offset" from="Car" to="." method="_on_Car_update_offset"]
