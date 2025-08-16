@@ -266,17 +266,17 @@ func update_wheel_steering_angle(wheelName: String, angle: float):
 			wheelSteerAngle[1] = angle
 	
 
-func _on_RayCast_update_offset(offset, distance):
-	emit_signal("update_offset", "FR", offset, distance)
+func _on_RayCast_update_offset(offset, distance, topPos, colPos):
+	emit_signal("update_offset", "FR", offset, distance, topPos, colPos)
 
 
-func _on_RayCast2_update_offset(offset, distance):
-	emit_signal("update_offset", "RR", offset, distance)
+func _on_RayCast2_update_offset(offset, distance, topPos, colPos):
+	emit_signal("update_offset", "RR", offset, distance, topPos, colPos)
 
 
-func _on_RayCast3_update_offset(offset, distance):
-	emit_signal("update_offset", "RL", offset, distance)
+func _on_RayCast3_update_offset(offset, distance, topPos, colPos):
+	emit_signal("update_offset", "RL", offset, distance, topPos, colPos)
 
 
-func _on_RayCast4_update_offset(offset, distance):
-	emit_signal("update_offset", "FL", offset, distance)
+func _on_RayCast4_update_offset(offset, distance, topPos, colPos):
+	emit_signal("update_offset", "FL", offset, distance, topPos, colPos)

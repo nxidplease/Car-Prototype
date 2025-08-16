@@ -1,15 +1,15 @@
 extends Node
 
-const offset_str = "%s Offset: %f Distance: %f"
+const offset_str = "%s Offset: %.2f Distance: %.2f Top: %s Collision: %.2f %.2f"
 
 var prev_RR_time = 0
 var prev_FR_time = 0
 var prev_self_align_time = 0
 
-func _on_Car_update_offset(wheel, offset, distance):
+func _on_Car_update_offset(wheel, offset, distance, topPos, colPos):
 	match wheel:
 		"FR":
-			$UI/FR_offset.text = offset_str % ["FR", offset, distance]
+			$UI/FR_offset.text = offset_str % ["FR", offset, distance, topPos, colPos.y, colPos.z]
 			
 #			print("Front: %f" % force_mag)
 			
@@ -19,7 +19,7 @@ func _on_Car_update_offset(wheel, offset, distance):
 #				print($UI/FR_Spring_Force.position.x)
 				prev_FR_time = curr_msec
 		"RR":
-			$UI/RR_offset.text = offset_str % ["RR", offset, distance]
+			$UI/RR_offset.text = offset_str % ["RR", offset, distance, topPos, colPos.y, colPos.z]
 			
 #			print("Rear: %f\n" % force_mag)
 			
@@ -29,9 +29,9 @@ func _on_Car_update_offset(wheel, offset, distance):
 #				print($UI/FR_Spring_Force.position.x)
 				prev_RR_time = curr_msec
 		"RL":
-			$UI/RL_offset.text = offset_str % ["RL", offset, distance]
+			$UI/RL_offset.text = offset_str % ["RL", offset, distance, topPos, colPos.y, colPos.z]
 		"FL":
-			$UI/FL_offset.text = offset_str % ["FL", offset, distance]
+			$UI/FL_offset.text = offset_str % ["FL", offset, distance, topPos, colPos.y, colPos.z]
 			
 func _physics_process(_delta):
 	$UI/Speed.text = "Speed: %f" % $Car.linear_velocity.length()

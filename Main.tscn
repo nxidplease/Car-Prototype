@@ -52,7 +52,7 @@ light_color = Color( 1, 0.960784, 0, 1 )
 shadow_enabled = true
 
 [node name="Car" parent="." instance=ExtResource( 1 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.85481, -498.17 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3049, -498.17 )
 engineForceCurve = SubResource( 4 )
 front_grip_curve = ExtResource( 9 )
 rear_grip_curve = ExtResource( 8 )
@@ -188,7 +188,7 @@ points = PoolVector2Array( 0, 600 )
 width = 2.0
 default_color = Color( 1, 0.0196078, 0.0196078, 1 )
 
-[node name="Camera" type="Camera" parent="."]
+[node name="FollowCamera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.949612, 0.313429, 0, -0.313429, 0.949612, 0, 3.4577, -175.17 )
 current = true
 script = ExtResource( 4 )
@@ -196,15 +196,15 @@ car_path = NodePath("../Car")
 back_offset = 4.0
 
 [node name="Obstacle" parent="." instance=ExtResource( 6 )]
-transform = Transform( 0.361625, 0, 0.932324, 0, 1, 0, -0.932324, 0, 0.361625, -6.3145, -0.265923, -481.332 )
+transform = Transform( 0.361625, 0, 0.932324, 0, 1, 0, -0.932324, 0, 0.361625, -6.3145, 0.738617, -481.332 )
 
 [node name="Obstacle2" parent="." instance=ExtResource( 6 )]
-transform = Transform( 0.313516, 0.498367, 0.808293, -0.180222, 0.866966, -0.464639, -0.932324, 0, 0.361625, -8.22008, -0.235006, -477.08 )
+transform = Transform( 0.313516, 0.498367, 0.808293, -0.180222, 0.866966, -0.464639, -0.932324, 0, 0.361625, -8.22008, 0.769534, -477.08 )
 
 [node name="Obstacle3" parent="." instance=ExtResource( 6 )]
-transform = Transform( -0.174092, -0.021553, 0.984493, -0.287664, 0.957264, -0.0299121, -0.941776, -0.288411, -0.172853, 21.3984, -0.210375, -477.08 )
+transform = Transform( -0.174092, -0.021553, 0.984493, -0.287664, 0.957264, -0.0299121, -0.941776, -0.288411, -0.172853, 21.3984, 0.794165, -477.08 )
 
 [node name="Ramp" parent="." instance=ExtResource( 7 )]
-transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -37.0314, 1.5, -425.534 )
+transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -37.0314, 2.50454, -425.534 )
 
 [connection signal="update_offset" from="Car" to="." method="_on_Car_update_offset"]

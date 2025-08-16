@@ -38,8 +38,9 @@ func calc_spring_force_for_wheel(collisionPoint: Vector3):
 		return 0
 		
 	var force_mag = spring_force + dampening_force
+	#var force_mag = spring_force
 	
-	emit_signal("update_offset", curr_offset, distance)
+	emit_signal("update_offset", curr_offset, distance, translation, localCollisionPoint)
 	
 	return force_mag
 #	return spring_force
@@ -52,6 +53,8 @@ func get_spring_force_at_wheel(collisionPoint: Vector3):
 	#return force_mag * get_collision_normal()
 	
 func getSpringForce():
+	force_raycast_update()
+	force_update_transform()
 	if is_colliding():
 		var collisionPoint = get_collision_point()
 #		print(to_local(collisionPoint))
@@ -66,8 +69,8 @@ func get_wheel_body_space_location() -> Vector3:
 	return transform * $Tyre.translation
 	
 func _process(_delta):
-	force_raycast_update()
-	force_update_transform()
+	#force_raycast_update()
+	#force_update_transform()
 	if is_colliding():
 		$Tyre.translation = to_local(get_collision_point()) + transform.basis.y*tyre_radius
 	else:

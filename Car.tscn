@@ -38,9 +38,9 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 500.0
+spring_strength = 450.0
 default_dist_from_groud = 0.5
-damping_strength = 50.0
+damping_strength = 25.0
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="RL"]
@@ -53,9 +53,9 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 500.0
+spring_strength = 450.0
 default_dist_from_groud = 0.5
-damping_strength = 50.0
+damping_strength = 25.0
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="FL"]
@@ -67,9 +67,9 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 500.0
+spring_strength = 450.0
 default_dist_from_groud = 0.5
-damping_strength = 50.0
+damping_strength = 25.0
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="FR"]
@@ -81,9 +81,9 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, -0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 500.0
+spring_strength = 450.0
 default_dist_from_groud = 0.5
-damping_strength = 50.0
+damping_strength = 25.0
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="RR"]
