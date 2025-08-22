@@ -1,10 +1,22 @@
 extends Node
 
 const offset_str = "%s Offset: %.2f Distance: %.2f Top: %s Collision: %.2f %.2f"
+const rpm_str = "RPM: %.0f"
 
 var prev_RR_time = 0
 var prev_FR_time = 0
 var prev_self_align_time = 0
+
+var slipRatios = [0.0, 0.0, 0.0, 0.0]
+
+onready var cameras: Array = [$Car/CameraGimbal/Camera, $FollowCamera]
+var camera_index = 1
+
+func _ready():
+	$Car.carEngine.connect("update_rpm", self, "_on_rpm_update")
+
+func _on_rpm_update(rpm: int):
+	$UI/RPM.text = rpm_str % rpm
 
 func _on_Car_update_offset(wheel, offset, distance, topPos, colPos):
 	match wheel:
@@ -34,30 +46,34 @@ func _on_Car_update_offset(wheel, offset, distance, topPos, colPos):
 			$UI/FL_offset.text = offset_str % ["FL", offset, distance, topPos, colPos.y, colPos.z]
 			
 func _physics_process(_delta):
-	$UI/Speed.text = "Speed: %f" % $Car.linear_velocity.length()
+	$UI/Speed.text = "Speed: %7.5f" % ($Car.linear_velocity.length() * 3.6)
 	$UI/Braking.text = "Braking: %s" % $Car.braking
 	$UI/Engine.text = "Engine: %s %s %s %s" % $Car.engineForce
 	$UI/Brake.text = "Brake: %s %s %s %s" % $Car.brakeForce
 	$UI/RR_force.text = "RR force: %s %s %s %s" % $Car.rrForce
 	$UI/SideSlip.text = "Side slip(FR, FL, RR, RL): %.2f, %.2f, %.2f, %.2f" % $Car.sideSlipRatio
-	$"UI/Steering(L\\R)".text = "Steering(L\\R): %f, %f" % $Car.wheelSteerAngle
-	$UI/Heading.text = "Heading: %f" % rad2deg($Car.global_rotation.y)
+	$"UI/Steering(L\\R)".text = "Steering(L\\R): %.2f, %.2f" % $Car.wheelSteerAngle
+	$UI/Heading.text = "Heading: %.0f" % rad2deg($Car.global_rotation.y)
+	$UI/GripFactor.text = "Grip factor: %3.2f %3.2f %3.2f %3.2f" % $Car.gripFactors
+	
+	var frontBackGripDiff = getFrontBackGripDiff()
+	
+	$UI/FrontBackGripDiff.text = "(F - R) Grip Diff(L, R): %3.2f, %3.2f" % [frontBackGripDiff.left, frontBackGripDiff.right]
 	_control_car()
 #	$UI/Self_Aligining.position.x = -curr_msec / 1000.0 * 1024 / 30
 
-func _process(delta):
+func getFrontBackGripDiff() -> Dictionary:
+	var left = $Car.gripFactors[1] - $Car.gripFactors[3] 
+	var right = $Car.gripFactors[0] - $Car.gripFactors[2]
 	
-	var curr_msec = OS.get_ticks_msec()
-#	if curr_msec - prev_self_align_time >= 200:
-#		$UI/Self_Aligining.add_point(Vector2(curr_msec / 200.0 * 1024 / 30, $Car/FL.rotation_degrees.y * 10 + 270))
-##				print($UI/FR_Spring_Force.position.x)
-#		prev_self_align_time = curr_msec
-	
-	$UI/FR_Spring_Force.position.x = -curr_msec / 1000.0 * 1024 / 30
-	$UI/RR_Spring_Force.position.x = -curr_msec / 1000.0 * 1024 / 30
-	
+	return {
+		left = left,
+		right = right
+	}
+
 func _control_car():
 	$Car.accelerating = Input.is_action_pressed("ui_up")
+	$Car.carEngine.accelerating = Input.is_action_pressed("ui_up")
 	$Car.braking = Input.is_action_pressed("ui_down")
 	$Car.steer_left = Input.is_action_pressed("ui_left")
 	$Car.steer_right = Input.is_action_pressed("ui_right")
@@ -67,6 +83,36 @@ func _control_car():
 	
 	if Input.is_action_just_pressed("jump"):
 		$Car.is_jumping = true;
+		
+	if Input.is_action_just_pressed("gear_up"):
+		$Car.carEngine.gear_up()
+		$UI/Gear.text = "Gear: %d" % ($Car.carEngine.currentGear - 1)
+		
+	if Input.is_action_just_pressed("gear_down"):
+		$Car.carEngine.gear_down()
+		$UI/Gear.text = "Gear: %d" % ($Car.carEngine.currentGear - 1)
+		
+	($Car as Car).adjust_braking()
+	
+	if Input.is_action_just_pressed("reset"):
+		$Car.reset()
+		$UI/Gear.text = "Gear: %d" % ($Car.carEngine.currentGear - 1)
+		
+	if Input.is_action_just_pressed("look_right"):
+		$Car/CameraGimbal.rotation.y = 0
+		
+	if Input.is_action_just_pressed("look_left"):
+		$Car/CameraGimbal.rotation.y = -PI
+		
+	if Input.is_action_just_pressed("cycle_camera"):
+		camera_index = (camera_index + 1) % cameras.size()
+		(cameras[camera_index] as Camera).current = true
+	
+	if Input.is_action_just_pressed("look_back"):
+		$FollowCamera.look_back = true
+		
+	if Input.is_action_just_released("look_back"):
+		$FollowCamera.look_back = false
 
 func _unhandled_input(event):
 	if event.is_action_pressed("drop_ball"):
@@ -77,3 +123,12 @@ func _unhandled_input(event):
 		ball.translation += $Car.global_transform.basis.x * 0.5
 		add_child(ball)
 	
+
+
+func _on_Car_update_slip_ratio(wheelIndex: int, slipRatio: float):
+	slipRatios[wheelIndex] = slipRatio
+	$UI/SlipRatio.text = "Slip ratio: %3.2f %3.2f %3.2f %3.2f" % slipRatios
+
+
+func _on_Car_update_angular_vel(wheels):
+	$UI/AngualrVel.text = "Angular Vel: %3.2f %3.2f %3.2f %3.2f" % [wheels[0].angular_vel, wheels[1].angular_vel, wheels[2].angular_vel, wheels[3].angular_vel]

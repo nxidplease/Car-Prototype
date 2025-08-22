@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://Car.gd" type="Script" id=1]
 [ext_resource path="res://Wheel.gd" type="Script" id=2]
@@ -21,6 +21,33 @@ height = 0.1
 [sub_resource type="SpatialMaterial" id=5]
 albedo_color = Color( 1, 0, 0, 1 )
 
+[sub_resource type="SpatialMaterial" id=6]
+albedo_color = Color( 0.639216, 1, 0, 1 )
+
+[sub_resource type="CylinderMesh" id=7]
+material = SubResource( 6 )
+top_radius = 0.0
+bottom_radius = 0.077
+height = 0.688
+
+[sub_resource type="SpatialMaterial" id=8]
+albedo_color = Color( 1, 0, 0, 1 )
+
+[sub_resource type="CylinderMesh" id=9]
+material = SubResource( 8 )
+top_radius = 0.0
+bottom_radius = 0.077
+height = 0.688
+
+[sub_resource type="SpatialMaterial" id=10]
+albedo_color = Color( 0.192157, 0.772549, 1, 1 )
+
+[sub_resource type="CylinderMesh" id=11]
+material = SubResource( 10 )
+top_radius = 0.0
+bottom_radius = 0.077
+height = 0.688
+
 [node name="Body" type="RigidBody"]
 mass = 10.0
 script = ExtResource( 1 )
@@ -38,9 +65,9 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 450.0
-default_dist_from_groud = 0.5
-damping_strength = 25.0
+spring_strength = 1687.5
+default_dist_from_groud = 0.4
+damping_strength = 93.75
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="RL"]
@@ -48,48 +75,140 @@ transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, -0.5
 mesh = SubResource( 4 )
 material/0 = SubResource( 5 )
 
+[node name="Y_Anchor" type="Spatial" parent="RL/Tyre"]
+
+[node name="Y" type="MeshInstance" parent="RL/Tyre/Y_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 7 )
+skeleton = NodePath("")
+
+[node name="X_Anchor" type="Spatial" parent="RL/Tyre"]
+transform = Transform( -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+
+[node name="Y" type="MeshInstance" parent="RL/Tyre/X_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 9 )
+skeleton = NodePath("")
+
+[node name="Z_Anchor" type="Spatial" parent="RL/Tyre"]
+transform = Transform( -4.37114e-08, 4.37114e-08, -1, 4.37114e-08, 1, 4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 0, 0, 5.96046e-08 )
+
+[node name="Y" type="MeshInstance" parent="RL/Tyre/Z_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 11 )
+skeleton = NodePath("")
+
 [node name="FL" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, 0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 450.0
-default_dist_from_groud = 0.5
-damping_strength = 25.0
+spring_strength = 1687.5
+default_dist_from_groud = 0.4
+damping_strength = 93.75
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="FL"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, -0.5, 0 )
 mesh = SubResource( 4 )
 
+[node name="Y_Anchor" type="Spatial" parent="FL/Tyre"]
+
+[node name="Y" type="MeshInstance" parent="FL/Tyre/Y_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 7 )
+skeleton = NodePath("")
+
+[node name="X_Anchor" type="Spatial" parent="FL/Tyre"]
+transform = Transform( -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+
+[node name="Y" type="MeshInstance" parent="FL/Tyre/X_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 9 )
+skeleton = NodePath("")
+
+[node name="Z_Anchor" type="Spatial" parent="FL/Tyre"]
+transform = Transform( -4.37114e-08, 4.37114e-08, -1, 4.37114e-08, 1, 4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 0, 0, 5.96046e-08 )
+
+[node name="Y" type="MeshInstance" parent="FL/Tyre/Z_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 11 )
+skeleton = NodePath("")
+
 [node name="FR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, 0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 450.0
-default_dist_from_groud = 0.5
-damping_strength = 25.0
+spring_strength = 1687.5
+default_dist_from_groud = 0.4
+damping_strength = 93.75
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="FR"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, -0.5, 0 )
 mesh = SubResource( 4 )
 
+[node name="Y_Anchor" type="Spatial" parent="FR/Tyre"]
+
+[node name="Y" type="MeshInstance" parent="FR/Tyre/Y_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 7 )
+skeleton = NodePath("")
+
+[node name="X_Anchor" type="Spatial" parent="FR/Tyre"]
+transform = Transform( -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+
+[node name="Y" type="MeshInstance" parent="FR/Tyre/X_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 9 )
+skeleton = NodePath("")
+
+[node name="Z_Anchor" type="Spatial" parent="FR/Tyre"]
+transform = Transform( -4.37114e-08, 4.37114e-08, -1, 4.37114e-08, 1, 4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 0, 0, 5.96046e-08 )
+
+[node name="Y" type="MeshInstance" parent="FR/Tyre/Z_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 11 )
+skeleton = NodePath("")
+
 [node name="RR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0, -0.9 )
 enabled = true
 collision_mask = 4
 script = ExtResource( 2 )
-spring_strength = 450.0
-default_dist_from_groud = 0.5
-damping_strength = 25.0
+spring_strength = 1687.5
+default_dist_from_groud = 0.4
+damping_strength = 93.75
 car_body_path = NodePath("..")
 
 [node name="Tyre" type="MeshInstance" parent="RR"]
 transform = Transform( -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, -0.5, 0 )
 mesh = SubResource( 4 )
 material/0 = SubResource( 5 )
+
+[node name="Y_Anchor" type="Spatial" parent="RR/Tyre"]
+
+[node name="Y" type="MeshInstance" parent="RR/Tyre/Y_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 7 )
+skeleton = NodePath("")
+
+[node name="X_Anchor" type="Spatial" parent="RR/Tyre"]
+transform = Transform( -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0 )
+
+[node name="Y" type="MeshInstance" parent="RR/Tyre/X_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 9 )
+skeleton = NodePath("")
+
+[node name="Z_Anchor" type="Spatial" parent="RR/Tyre"]
+transform = Transform( -4.37114e-08, 4.37114e-08, -1, 4.37114e-08, 1, 4.37114e-08, 1, -4.37114e-08, -4.37114e-08, 0, 0, 5.96046e-08 )
+
+[node name="Y" type="MeshInstance" parent="RR/Tyre/Z_Anchor"]
+transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
+mesh = SubResource( 11 )
+skeleton = NodePath("")
 
 [connection signal="update_offset" from="RL" to="." method="_on_RayCast_update_offset"]
 [connection signal="update_offset" from="FL" to="." method="_on_RayCast2_update_offset"]
