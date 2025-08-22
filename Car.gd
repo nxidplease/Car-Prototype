@@ -296,9 +296,17 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 	
 #	var tire_forward_vel = ground_vel_at_wheel.project(wheel.transform.basis.z)
 #	var tire_side_vel = ground_vel_at_wheel.project(wheel.global_transform.basis.x)
-	var steering_vel = ground_vel_at_wheel.project(wheel.global_transform.basis.x)
+	# Removing any y component resulting from body roll
+#	var pure_side_dir = wheel.global_transform.basis.x - wheel.global_transform.basis.x.project(Vector3.UP)
+	var pure_side_dir = wheel.global_transform.basis.x
+	var steering_vel = ground_vel_at_wheel.project(pure_side_dir)
+	
+	var steering_vel_scalar = ground_vel_at_wheel.dot(pure_side_dir)
 	
 	var side_to_total_vel_ratio = steering_vel.length() / ground_vel_at_wheel.length()
+	
+#	if wheel.name == 'FR':
+#		print('Steer Vel: %3.2f' % steering_vel_scalar)
 	
 	
 	var grip_factor
@@ -314,11 +322,11 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 	
 	gripFactors[wheelArrIndex[wheel.name]] = grip_factor
 	
-	var steer_force: Vector3 = -steering_vel * wheel.tyre_mass * grip_factor / state.step
+	var steer_force: Vector3 = -steering_vel * mass/4.0 * grip_factor / state.step
 	
 	var size_before: float = steer_force.length()
 	
-	steer_force = steer_force.limit_length(175.0)
+#	steer_force = steer_force.limit_length(max_steer_force)
 	
 	var size_after = steer_force.length()
 	

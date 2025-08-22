@@ -26,6 +26,9 @@ onready var tyre_mass: float = 18.8
 
 class_name Wheel
 
+func _ready():
+	cast_to = Vector3.DOWN * (default_dist_from_groud + tyre_radius)
+
 func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	var localCollisionPoint = car_body.to_local(collisionPoint)
 	var distance = translation.distance_to(localCollisionPoint)
@@ -144,7 +147,7 @@ func _updateAngularVel(drive_change: float, brake_input: float, dt: float):
 #		print("%.0f %.3f %.3f" % [drive_change, angularVelChange * dt, angular_vel])
 		
 func get_wheel_body_space_location() -> Vector3:
-	return transform * $Tyre.translation
+	return transform.xform($Tyre.translation)
 	
 func _process(_delta):
 	#force_raycast_update()
@@ -195,6 +198,6 @@ func calc_slip_ratio() -> float:
 	var slipRatio = 0.0
 	
 	if is_colliding():
-		slipRatio = contact_vel / rolling_vel - 1
+		slipRatio = contact_vel / abs(rolling_vel) - sign(rolling_vel)
 	
 	return slipRatio

@@ -53,7 +53,7 @@ light_color = Color( 1, 0.960784, 0, 1 )
 shadow_enabled = true
 
 [node name="Car" parent="." instance=ExtResource( 1 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3049, -463.153 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3049, -3.16119 )
 mass = 30.0
 engineForceCurve = SubResource( 4 )
 front_grip_curve = ExtResource( 9 )
@@ -73,11 +73,11 @@ transform = Transform( -4.37114e-08, -0.0259152, 0.999664, 0, 0.999664, 0.025915
 
 [node name="CarEngine" type="Node" parent="Car"]
 script = ExtResource( 10 )
-a = 500
-b = 36
-c = 0.2
-d = 5500
-f = 830
+a = 540
+b = 200
+c = 1.1
+d = 4400
+f = 4000
 engine_break = 0.1
 engine_friction = 0.05
 
@@ -242,23 +242,133 @@ transform = Transform( 1, 0, 0, 0, 0.949612, 0.313429, 0, -0.313429, 0.949612, 0
 current = true
 script = ExtResource( 4 )
 car_path = NodePath("../Car")
-back_offset = 4.0
 
 [node name="Obstacle" parent="." instance=ExtResource( 6 )]
-transform = Transform( 0.361625, 0, 0.932324, 0, 1, 0, -0.932324, 0, 0.361625, -6.3145, 0.738617, -481.332 )
-collision_mask = 0
-
-[node name="Obstacle2" parent="." instance=ExtResource( 6 )]
-transform = Transform( 0.313516, 0.498367, 0.808293, -0.180222, 0.866966, -0.464639, -0.932324, 0, 0.361625, -8.22008, 0.769534, -477.08 )
-collision_mask = 0
-
-[node name="Obstacle3" parent="." instance=ExtResource( 6 )]
-transform = Transform( -0.174092, -0.021553, 0.984493, -0.287664, 0.957264, -0.0299121, -0.941776, -0.288411, -0.172853, 21.3984, 0.794165, -477.08 )
+transform = Transform( 0.361625, 0, 0.932324, 0, 1, 0, -0.932324, 0, 0.361625, -6.3145, 1.46152, -481.332 )
 collision_mask = 0
 
 [node name="Ramp" parent="." instance=ExtResource( 7 )]
 transform = Transform( 0.967237, 0, -0.253876, 0, 1, 0, 0.253876, 0, 0.967237, -37.0314, 2.50454, -425.534 )
 collision_mask = 0
+
+[node name="Obstacle3" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -413.931 )
+collision_mask = 0
+
+[node name="Obstacle4" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -413.416 )
+collision_mask = 0
+
+[node name="Obstacle5" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -412.925 )
+collision_mask = 0
+
+[node name="Obstacle6" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -412.409 )
+collision_mask = 0
+
+[node name="Obstacle7" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -411.898 )
+collision_mask = 0
+
+[node name="Obstacle8" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -411.383 )
+collision_mask = 0
+
+[node name="Obstacle9" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -410.891 )
+collision_mask = 0
+
+[node name="Obstacle11" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -409.9 )
+collision_mask = 0
+
+[node name="Obstacle12" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -409.384 )
+collision_mask = 0
+
+[node name="Obstacle13" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -408.893 )
+collision_mask = 0
+
+[node name="Obstacle14" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -408.377 )
+collision_mask = 0
+
+[node name="Obstacle15" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -407.866 )
+collision_mask = 0
+
+[node name="Obstacle16" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -407.351 )
+collision_mask = 0
+
+[node name="Obstacle17" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -406.86 )
+collision_mask = 0
+
+[node name="Obstacle18" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -406.483 )
+collision_mask = 0
+
+[node name="Obstacle19" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -405.968 )
+collision_mask = 0
+
+[node name="Obstacle20" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -405.477 )
+collision_mask = 0
+
+[node name="Obstacle21" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -404.961 )
+collision_mask = 0
+
+[node name="Obstacle22" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -404.45 )
+collision_mask = 0
+
+[node name="Obstacle23" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -403.935 )
+collision_mask = 0
+
+[node name="Obstacle24" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -403.443 )
+collision_mask = 0
+
+[node name="Obstacle25" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -402.909 )
+collision_mask = 0
+
+[node name="Obstacle26" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -402.393 )
+collision_mask = 0
+
+[node name="Obstacle27" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -401.902 )
+collision_mask = 0
+
+[node name="Obstacle28" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -401.386 )
+collision_mask = 0
+
+[node name="Obstacle29" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -400.875 )
+collision_mask = 0
+
+[node name="Obstacle30" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -400.36 )
+collision_mask = 0
+
+[node name="Obstacle31" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -399.868 )
+collision_mask = 0
+
+[node name="Obstacle10" parent="." instance=ExtResource( 6 )]
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -11.9169, 1.333, -410.376 )
+collision_mask = 0
+
+[node name="Rattle" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -17.8701, -0.228253, -406.886 )
 
 [connection signal="update_angular_vel" from="Car" to="." method="_on_Car_update_angular_vel"]
 [connection signal="update_offset" from="Car" to="." method="_on_Car_update_offset"]

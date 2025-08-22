@@ -89,8 +89,8 @@ func adjust_throttle(dt):
 		
 func update_engine(rolling_rpm: float, dt: float):
 	
-	if currentGear == 0:
-		print("Help!")
+#	if currentGear == 0:
+#		print("Help!")
 	
 	var rolling_eng_rpm = rolling_rpm * final_drive * gear_ratios[currentGear]
 	var rpmChange = _get_engine_torque_by_rpm(currentRpm) * throttle - engine_friction * currentRpm

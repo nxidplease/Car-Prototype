@@ -2,6 +2,9 @@ extends Camera
 export(NodePath) var car_path
 export(float) var up_offset = 1.5
 export(float) var back_offset = 3.5
+#export(float) var max_distance = 4
+#export(float) var min_distance = 2
+#export var height = 1.5
 
 onready var car: RigidBody = get_node(car_path)
 
@@ -11,19 +14,38 @@ func _ready():
 	if !current:
 		set_process(false)
 
+#func cool_camera():
+#	var target = car.get_global_transform().origin
+#	var pos = get_global_transform().origin
+#
+#	var from_target = pos - target
+#
+#	# Check ranges.
+#	if from_target.length() < min_distance:
+#		from_target = from_target.normalized() * min_distance
+#	elif from_target.length() > max_distance:
+#		from_target = from_target.normalized() * max_distance
+#
+#	from_target.y = height
+#
+#	pos = target + from_target
+#
+#	look_at_from_position(pos, target, Vector3.UP)
+	
+
 func _process(_delta):
 #	project car facing onto ground and normalize(important if car is tilting back/forward
 	var camera_back_dir = (car.transform.basis.z - car.transform.basis.z.project(Vector3.UP)).normalized()
-	
+
 	var velocity_to_ground_proj = car.linear_velocity - car.linear_velocity.project(Vector3.UP)
-	
+
 #	print(velocity_to_ground_proj.length())
 
 	if velocity_to_ground_proj.length() > 1.5:
 		camera_back_dir = velocity_to_ground_proj.normalized()
-		
+
 		if look_back:
 			camera_back_dir *= -1
-	
+
 #	var car_forward_edge = car.translation + car.transform.basis.z
 	look_at_from_position(car.translation - camera_back_dir * back_offset + Vector3.UP * up_offset, car.translation, Vector3.UP)
