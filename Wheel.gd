@@ -44,7 +44,7 @@ func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	dampening_force = -velocity_to_offset * damping_strength
 	spring_force = spring_strength * curr_offset
 	
-	if curr_offset < 0:
+	if curr_offset < -0.2:
 		return 0
 		
 	var force_mag = spring_force + dampening_force
@@ -76,8 +76,8 @@ func getSpringForce():
 func updateAngualrVel(brake_input: float, dt: float, engine_torque: float, expected_rpm: float):
 #	if (expected_rpm > 0):
 #		print('WOW')
-	var expected_angular_vel = (expected_rpm / 60) * 2 * PI;
-	var drive_change = (engine_torque / 500) * (expected_angular_vel - angular_vel)
+	var expected_angular_vel = (expected_rpm / 60.0) * 2.0 * PI;
+	var drive_change = (engine_torque / 500.0) * (expected_angular_vel - angular_vel)
 #	var drive_change = 5 * (expected_angular_vel - angular_vel)
 #	var drive_change = engine_torque * (expected_angular_vel - angular_vel)
 	_updateAngularVel(drive_change, brake_input, dt);
@@ -120,15 +120,14 @@ func getUndrivenForce(max_friction: float) -> Dictionary:
 		
 #		if name == 'FR':
 #			print('Car: %.2f Wheel: %.2f Diff(Wheel - Car): %.2f' % [desired, actual, actual - desired])
-		
-		# THe problem is herreeeeeee when decellerating
+
 		long_force = desired_force
+		long_force = clamp(long_force, -max_friction, max_friction)
 	else:		
 		slip_ratio = calc_slip_ratio()
 		var long_pacejka = car_body.long_pacejka
 		long_force = car_body.pacejka(slip_ratio, long_pacejka.b, long_pacejka.c, max_friction, long_pacejka.e)
 	
-	long_force = clamp(long_force, -max_friction, max_friction)
 		
 	return {
 		"long_force": long_force,

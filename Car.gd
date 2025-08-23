@@ -168,17 +168,16 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 
 func update_gizmos(wheelRayCast: Node, totalForce: Vector3, wheel: Spatial, scaleFactor: float = 25.0):
 	
-	var xProj = totalForce.project(wheel.global_transform.basis.x)
-	var yProj = totalForce.project(wheel.global_transform.basis.y)
-	var zProj = totalForce.project(wheel.global_transform.basis.z)
+	if wheelRayCast.get_child_count() < 1:
+		return
 	
 	var xScale = totalForce.dot(wheel.global_transform.basis.x)
 	var yScale = totalForce.dot(wheel.global_transform.basis.y)
 	var zScale = totalForce.dot(wheel.global_transform.basis.z)
 	
-	var xGizmo = wheelRayCast.get_node("Tyre/X_Anchor");
-	var yGizmo = wheelRayCast.get_node("Tyre/Y_Anchor");
-	var zGizmo = wheelRayCast.get_node("Tyre/Z_Anchor");
+	var xGizmo = wheelRayCast.get_node("Tyre/Gizmos/X_Anchor");
+	var yGizmo = wheelRayCast.get_node("Tyre/Gizmos/Y_Anchor");
+	var zGizmo = wheelRayCast.get_node("Tyre/Gizmos/Z_Anchor");
 	
 	xGizmo.scale.x = xScale / scaleFactor
 	yGizmo.scale.x = yScale / scaleFactor
@@ -222,19 +221,20 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	
 	if drivenWheels[drivetrain].has(wheel.name):
 		var tracForceMag = carEngine.get_torque_at_wheels() / wheel.tyre_radius
-		
-		if(abs(tracForceMag) <= max_trac_force ||  (linear_velocity - linear_velocity.project(Vector3.UP)).length() < min_vel_for_slip):
-			tracForce = forwardGroundDir * clamp(tracForceMag, -max_trac_force, max_trac_force)
-			
-#			if wheel.name == 'RR':
-#				print(tracForceMag)
-		else:
-			slip_ratio = wheel.calc_slip_ratio()
-			# Need to blend between undriven and driven force, specifically when clutch is not 100%
-			tracForce = pacejka(slip_ratio, long_pacejka.b, long_pacejka.c, springForce.length(), long_pacejka.e) * forwardGroundDir
+#
+#		if(abs(tracForceMag) <= max_trac_force ||  (linear_velocity - linear_velocity.project(Vector3.UP)).length() < min_vel_for_slip):
+#			tracForce = forwardGroundDir * clamp(tracForceMag, -max_trac_force, max_trac_force)
+#
+##			if wheel.name == 'RR':
+##				print(tracForceMag)
+#		else:
+#			slip_ratio = wheel.calc_slip_ratio()
+#			# Need to blend between undriven and driven force, specifically when clutch is not 100%
+#			tracForce = pacejka(slip_ratio, long_pacejka.b, long_pacejka.c, springForce.length(), long_pacejka.e) * forwardGroundDir
 
-#		var forceAndSlip = wheel.getDrivenForce(tracForceMag, max_trac_force)
-#		tracForce = forwardGroundDir * forceAndSlip["long_force"]
+		var forceAndSlip = wheel.getDrivenForce(tracForceMag, max_trac_force)
+		tracForce = forwardGroundDir * forceAndSlip["long_force"]
+		slip_ratio = forceAndSlip["slip_ratio"]
 			
 			
 			
