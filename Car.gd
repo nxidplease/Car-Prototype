@@ -430,6 +430,7 @@ func update_wheel_steering_angle(wheelName: String, angle: float):
 func reset():
 	global_transform.origin = Vector3(0, 2.305, -463.153)
 	carEngine.currentGear = 1
+	carEngine.currentRpm = 1000
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
 	rotation = Vector3.ZERO

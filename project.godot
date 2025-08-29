@@ -95,6 +95,10 @@ look_back={
 3d_physics/layer_3="Ground"
 3d_physics/layer_4="Wheels"
 
+[mono]
+
+project/assembly_name="Car Prototype"
+
 [physics]
 
 common/enable_pause_aware_picking=true
