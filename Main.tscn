@@ -88,21 +88,14 @@ engine_friction = 0.05
 [node name="EngineSound" type="Node" parent="Car"]
 script = ExtResource( 11 )
 carEngine = NodePath("../CarEngine")
-triangleAmp = 1.0
-sawAmp = 0.077
-sineAmp = 0.29
-sineNoiseAmp = 0.269
-sineNoisePhaseShift = 0.224
-sinePhaseShift = 0.208
-finalNoiseContribution = 0.106
-baseMinNoise = 0.233
-baseMaxNoise = 0.694
-triangleFreqMod = 0.364
-sineFreqMod = 0.122
+noiseLowPassCutoff = 3014.63
+vibrationsLowPassCutoff = 7909.61
+intakeVolume = 0.536
+vibrationsVolume = 0.277
 
 [node name="Player" type="AudioStreamPlayer" parent="Car/EngineSound"]
 stream = SubResource( 8 )
-volume_db = -24.0
+volume_db = -12.252
 
 [node name="FollowCamera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.949612, 0.313429, 0, -0.313429, 0.949612, 0, 3.4577, -175.17 )

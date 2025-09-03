@@ -22,45 +22,22 @@ public class engine_noise : Node
 	[Export(PropertyHint.Range, "1000, 10000")]
 	private float maxRpm = DEFAULT_MAX_RPM;
 
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float triangleAmp = .75f;
+	[Export(PropertyHint.Range, "4, 12,")]
+	private int cylinderCount = 6;
 
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float sawAmp = .5f;
+	[Export(PropertyHint.ExpRange, "100, 20000")]
+	private float noiseLowPassCutoff = 10000f;
 
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float sineAmp = 1.0f;
+	[Export(PropertyHint.ExpRange, "100, 20000")]
+	private float vibrationsLowPassCutoff = 10000f;
 
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float sineNoiseAmp = 1.0f;
+	[Export(PropertyHint.Range, "0, 1.0")]
+	private float intakeVolume = 0.5f;
 
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float sineNoisePhaseShift = .3f;
-
-	// [Export(PropertyHint.Range, "0.0, .125")]
-	// private float noiseSineModulation = .01f;
-
-	[Export(PropertyHint.Range, "0.0, .5")]
-	private float sinePhaseShift = .01f;
-
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float finalNoiseContribution = .3f;
-
-	// [Export(PropertyHint.Range, "0.0, 1.0")]
-	// private float baseNoiseAmp = .3f;
-
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float baseMinNoise = .1f;
-
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float baseMaxNoise = .6f;
-
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float triangleFreqMod = .1f;
-
-	[Export(PropertyHint.Range, "0.0, 1.0")]
-	private float sineFreqMod = .1f;
+	[Export(PropertyHint.Range, "0, 1.0")]
+	private float vibrationsVolume = 0.5f;
 	float phase = 0;
+	float secondPhase = 0;
 
 	private AudioStreamGeneratorPlayback playback;
 
@@ -78,8 +55,14 @@ public class engine_noise : Node
 	private PinkNoise pinkNoise = new PinkNoise();
 	private PinkNoise envelopeNoise = new PinkNoise();
 
-	// The size is calcualted from (1000/60 * 3) (50Hz) and then 2/50 * 44100 =~ 1764 round up to closest multiple of 2
-	private RingBuffer generationBuffer = new RingBuffer(2048);
+	private LowPassFilter noiseLowPass;
+
+	private LowPassFilter vibrationsLowPass;
+
+	private WaveGuide waveGuide;
+
+	// Start with a single Cylinder
+	private Cylinder[] cylinders;
 
 	// Used to keep track of which cylinder group is firing when
 	private float engineTime = 0f;
@@ -87,16 +70,38 @@ public class engine_noise : Node
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		noiseLowPass = new LowPassFilter(noiseLowPassCutoff, sampleRate);
+		vibrationsLowPass = new LowPassFilter(vibrationsLowPassCutoff, sampleRate);
+		initCylinders();
 		AudioStreamPlayer player = GetNode<AudioStreamPlayer>("Player");
 		playback = (AudioStreamGeneratorPlayback)player.GetStreamPlayback();
 		FillBuffer(0);
 		player.Play();
 	}
 
+	private void initCylinders()
+	{
+		cylinders = new Cylinder[cylinderCount];
+
+		for (int i = 0; i < cylinderCount; i++)
+		{
+			cylinders[i] = new Cylinder(sampleRate, 0.25f);
+		}
+	}
+
 	//  // Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(float delta)
 	{
-		engineTime += delta;
+		if (noiseLowPass.getAlpha(noiseLowPassCutoff) != noiseLowPass.alpha)
+		{
+			noiseLowPass.setCutOff(noiseLowPassCutoff);
+		}
+
+		if (vibrationsLowPass.getAlpha(vibrationsLowPassCutoff) != vibrationsLowPass.alpha)
+		{
+			vibrationsLowPass.setCutOff(vibrationsLowPassCutoff);
+		}
+
 		FillBuffer(delta);
 	}
 	private float[] phases = new float[HARMONICS_COUNT * WAVE_FORM_COUNT];
@@ -118,94 +123,79 @@ public class engine_noise : Node
 		}
 	}
 
-	private void generateData(Vector2[] buffer, int framesAvailble)
+	private float exhaustValve(float crankPos)
 	{
-
-		float currentRpm = (float)GetNode(carEngine).Get("currentRpm");
-		float baseFreq = GetBaseFreq(currentRpm);
-		float normalizedRpm = (currentRpm - minRpm) / (float)(maxRpm - minRpm);
-
-		float maxSample = 0;
-
-		// int framesForFullCycle = (int)Math.Ceiling((2 / baseFreq) * sampleRate);
-
-		float firingFrequency = currentRpm / 120f;
-
-		int framesToFill = Math.Min(generationBuffer.availableSpace(), framesAvailble);
-
-		float previousEngineTime = engineTime;
-
-		for (int i = 0; i < framesToFill; i++)
+		if (crankPos < .75f || crankPos > 1)
 		{
-			engineTime += 1f / sampleRate;
-			float baseNoise = basePinkNoise.NextSample() * (baseMinNoise + (baseMaxNoise - baseMinNoise) * normalizedRpm);
-			float sample = 0.0f;
-
-			for (int harmonic = 1; harmonic < HARMONICS_COUNT; harmonic++)
-			{
-				float currSample = 0;
-				// float harmonicPhase = phases[harmonic - 1];
-				float firePhase = (float)(engineTime * firingFrequency + harmonic / (float)HARMONICS_COUNT) % 1.0f;
-				float envelope = 0.5f * (1 - Mathf.Cos(Mathf.Tau * firePhase)); // fast thump
-				envelope = envelope * .9f + .1f;
-				currSample += triangleAmp * envelope * Triangle(getWaveFormPhase(harmonic, 0));
-				// currSample += triangleAmp * Triangle(getWaveFormPhase(harmonic, 0));
-				currSample += sineAmp * Sine(getWaveFormPhase(harmonic, 1) + Mathf.Tau * sinePhaseShift);
-				float noise = pinkNoise.NextSample();
-				// float noise = Noise();
-				currSample += (sineNoiseAmp * noise + (1 - sineNoiseAmp)) * Sine(getWaveFormPhase(harmonic, 2) + Mathf.Tau * noise * sineNoisePhaseShift *(.1f + .9f * normalizedRpm));
-				currSample += sawAmp * Saw(getWaveFormPhase(harmonic, 3));
-				// currSample *= harmonicGains[harmonic - 1];
-				// currSample *= envelope;
-				// float envelope = Mathf.Pow(1f - firePhase, 2f);
-				// float envelope = Mathf.Lerp(1f, 0f, firePhase);
-				sample += currSample;
-
-				updateWaveFormPhase(harmonic, 0, Mathf.Tau * (baseFreq * harmonic + triangleFreqMod) * (1f / sampleRate));
-				updateWaveFormPhase(harmonic, 1, Mathf.Tau * (baseFreq * harmonic + sineFreqMod) * (1f / sampleRate));
-				updateWaveFormPhase(harmonic, 2, Mathf.Tau * baseFreq * harmonic * (1f / sampleRate));
-				updateWaveFormPhase(harmonic, 3, Mathf.Tau * baseFreq * harmonic * (1f / sampleRate));
-				// updateWaveFormPhase(harmonic, 0, ((Mathf.Tau + Mathf.Tau / harmonic * triangleConstant * normalizedRpm) * baseFreq * harmonic) / sampleRate);
-				// updateWaveFormPhase(harmonic, 1, ((Mathf.Tau + Mathf.Tau / harmonic * sineConstant * normalizedRpm / 2) * baseFreq * harmonic) / sampleRate);
-				// updateWaveFormPhase(harmonic, 2, ((Mathf.Tau + Mathf.Tau / harmonic * noise * normalizedRpm / 3) * baseFreq * harmonic) / sampleRate);
-				// updateWaveFormPhase(harmonic, 3, ((Mathf.Tau + Mathf.Tau / harmonic * sawConstant * 3 * (1 - normalizedRpm)) * baseFreq * harmonic) / sampleRate);
-
-			}
-			
-			// GD.Print($"min Env: {minEnv}");
-
-			// float firePhase = (float)(engineTime * baseFreq) % 1.0f;
-			// float envelope = Mathf.Exp(-5f * (1 + envelopeNoise.NextSample() * 0.2f) * firePhase); // fast thump
-			// sample *= envelope;
-			sample = baseNoise * finalNoiseContribution + sample * (1 - finalNoiseContribution);
-
-			// sample = baseNoise * sample;
-
-			maxSample = Mathf.Max(Mathf.Abs(sample), maxSample);
-
-			// sample = Mathf.Clamp(sample, -1, 1);
-
-			buffer[i] = new Vector2(sample, sample);
-			// phase = (phase + (baseFreq / sampleRate)) % 1.0f;
+			return 0;
 		}
 
-		// Reset to previous since next dt will include this time
-		engineTime = previousEngineTime;
+		return -Mathf.Sin(2 * Mathf.Tau * crankPos);
+	}
+
+	private float intakeValve(float crankPos)
+	{
+		if (crankPos < 0 || crankPos > .25f)
+		{
+			return 0;
+		}
+
+		return Mathf.Sin(2 * Mathf.Tau * crankPos);
+	}
+
+	private float postionMotion(float crankPos)
+	{
+		return Mathf.Cos(2 * Mathf.Tau * crankPos);
+	}
+
+	// t - Time(relative to full cycle) needed by the fuel to explode
+	private float fuelIgnition(float crankPos, float t)
+	{
+		if (crankPos < 0 || crankPos > t)
+		{
+			return 0;
+		}
+
+		return Mathf.Sin(Mathf.Tau * (crankPos * t + .5f));
+	}
+
+	// Move to an "Engine" class
+	float crankPos = 0;
+
+	private void generateData(Vector2[] buffer, int framesAvailble)
+	{
+		float currentRpm = (float)GetNode(carEngine).Get("currentRpm");
+
+		float throttle = (float)GetNode(carEngine).Get("throttle");
+
+		float freq = currentRpm / 120f; // pistons fire once every two cycles and converting (per minute) to (per second)
+
+		float crankPosInc = freq / sampleRate;
+
+		for (int i = 0; i < framesAvailble; i++)
+		{
+			crankPos = (crankPos + crankPosInc) % 1.0f;
+
+			float sample = 0;
+
+			// This ensures equal distribution of pistons firing over time, if the distribution is not equal we will get growling
+			float pistonOffset = 1 / cylinders.Length;
+
+			for (int j = 0; j < cylinders.Length; j++)
+			{
+				float crankOffset = (j + 1) * pistonOffset / 2;
+				CylinderOut cylinderOut = cylinders[j].Write(crankPos + crankOffset, throttle, noiseLowPass.filter(Noise()));
+				sample += cylinderOut.intakeOut * intakeVolume + vibrationsLowPass.filter(cylinderOut.vibrationsOut) * vibrationsVolume;
+			}
+
+			buffer[i] = Vector2.One * sample;
+		}
 	}
 
 	private void FillBuffer(float delta)
 	{
-		// float phase = 0;
 
 		int framesAvailable = playback.GetFramesAvailable();
-		// int framesForFullCycle = (int)Math.Ceiling((2 / baseFreq) * sampleRate);
-
-		// int framesToFill = Math.Min(framesAvailable, framesForFullCycle);
-
-		// if (framesForFullCycle > framesAvailable && framesAvailable > 0)
-		// {
-		// 	GD.Print($"It's bigger! {framesForFullCycle} {framesAvailable} ");
-		// }
 
 		if (framesAvailable == 0)
 		{
@@ -214,65 +204,12 @@ public class engine_noise : Node
 
 		Vector2[] buffer = new Vector2[framesAvailable];
 
-		// if (generationBuffer.availableData() >= framesAvailable)
-		// {
-
-		// 	GD.Print($"1 Before read: {generationBuffer.availableData()}");
-
-		// 	for (int i = 0; i < framesAvailable; i++)
-		// 	{
-		// 		buffer[i] = generationBuffer.read();
-		// 	}
-		// 	GD.Print($"1 After read: {generationBuffer.availableData()}");
-		// }
-		// else
-		// {
-		// 	int currentData = generationBuffer.availableData();
-
-		// 	GD.Print($"2 Before read: {generationBuffer.availableData()}");
-		// 	for (int i = 0; i < currentData; i++)
-		// 	{
-		// 		buffer[i] = generationBuffer.read();
-		// 	}
-
-		// 	GD.Print($"2 After read: {generationBuffer.availableData()}");
-
-		// 	framesAvailable -= currentData;
-
-		// 	int generatedFrames = generationBuffer.availableData();
-
-		// 	GD.Print($"Generated:  {generationBuffer.availableData()}, Requested: {framesAvailable}");
-
-		// 	for (int i = currentData; i < currentData + Math.Min(generatedFrames, framesAvailable); i++)
-		// 	{
-		// 		buffer[i] = generationBuffer.read();
-		// 	}
-		// }
-
 		generateData(buffer, framesAvailable);
-
-
-		// if (framesAvailable > 0)
-		// {
-		// 	GD.Print($" Frame time: {(framesAvailable / (float)sampleRate):F3}s");
-		// }
 
 		if (framesAvailable > 0)
 		{
-			// GD.Print($"Sample: {maxSample:F6}");
 			playback.PushBuffer(buffer);
 		}
-
-		// GD.Print($"Filled {framesAvailable} frames, which is {(framesAvailable / (float)sampleRate).ToString("F3")}s, Skips {playback.GetSkips()}");
-
-		// while (framesAvailable > 0)
-		// {
-		// 	float sample = Mathf.Sin(phase) * 0.125f;
-		// 	phase = (phase + (baseFreq / sampleRate)) % 1.0f;
-
-		// 	playback.PushFrame(new Vector2(sample, sample));
-		// 	framesAvailable--;
-		// }
 	}
 
 	private float GetBaseFreq(float currentRpm)

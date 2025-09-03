@@ -2,50 +2,35 @@ using Godot;
 
 class RingBuffer
 {
-	private int dataCount = 0;
-	private Vector2[] buffer;
 
-	private int writeIndex = 0;
-	private int readIndex = 0;
+	private float[] buffer;
+
+	private int pos = 0;
 
 	public RingBuffer(int capacity)
 	{
-		buffer = new Vector2[capacity];
+		buffer = new float[capacity];
+		buffer.Initialize();
 	}
 
-	public bool isEmpty()
+	public void Write(float item)
 	{
-		return dataCount == 0;
+		buffer[pos] = item;
 	}
 
-	public bool isFull()
+	// Read a sample from cpacity ago samples
+	// samplesBack is effective buffer capacity(to allow variable buffer length)
+	public float Read(int samplesBack = -1)
 	{
-		return dataCount == buffer.Length;
+		if (samplesBack == -1) {
+			samplesBack = buffer.Length - 1;
+		}
+
+		return buffer[(pos + buffer.Length - samplesBack) % buffer.Length];
 	}
 
-	public int availableData()
+	public void advance()
 	{
-		return dataCount;
-	}
-
-	public int availableSpace()
-	{
-		return buffer.Length - dataCount;
-	}
-
-	public void write(Vector2 item)
-	{
-		buffer[writeIndex] = item;
-		writeIndex = (writeIndex + 1) % buffer.Length;
-		dataCount++;
-	}
-
-	public Vector2 read()
-	{
-		Vector2 readValue = buffer[readIndex];
-		readIndex = (readIndex + 1) % buffer.Length;
-		dataCount--;
-
-		return readValue;
+		pos = (pos + 1) % buffer.Length;
 	}
 }
