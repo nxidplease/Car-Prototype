@@ -12,7 +12,13 @@ struct WaveGuideOutput {
 	public float secondChamberOut;
 }
 
-
+/// <summary>
+/// WaveGuide represents a "tube" of an arbitrary length(controled by the delay time),
+/// 
+/// first_in and secondChamberOut represent one end of the tube, while second_in and firstChamberOut
+/// represent the other.
+///
+/// </summary>
 class WaveGuide
 {
 	const float MAX_WAVE_GUIDE_AMP = 20f;
@@ -52,7 +58,7 @@ class WaveGuide
 			return sample;
 		}
 
-		return Mathf.Clamp(sample, -MAX_WAVE_GUIDE_AMP, MAX_WAVE_GUIDE_AMP);
+		return Mathf.Sign(sample) * -1 / (sample - MAX_WAVE_GUIDE_AMP + 1) + 1 + MAX_WAVE_GUIDE_AMP;
 	}
 
 	public void Push(float first_in, float second_in)

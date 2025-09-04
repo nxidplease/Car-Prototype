@@ -25,17 +25,30 @@ public class engine_noise : Node
 	[Export(PropertyHint.Range, "4, 12,")]
 	private int cylinderCount = 6;
 
-	[Export(PropertyHint.ExpRange, "100, 20000")]
+	[Export(PropertyHint.ExpRange, "30, 20000")]
 	private float noiseLowPassCutoff = 10000f;
 
-	[Export(PropertyHint.ExpRange, "100, 20000")]
+	[Export(PropertyHint.ExpRange, "30, 20000")]
 	private float vibrationsLowPassCutoff = 10000f;
+
+	[Export(PropertyHint.ExpRange, "30, 20000")]
+	private float pistonRandomnessLowPassCutoff = 10000f;
 
 	[Export(PropertyHint.Range, "0, 1.0")]
 	private float intakeVolume = 0.5f;
 
 	[Export(PropertyHint.Range, "0, 1.0")]
 	private float vibrationsVolume = 0.5f;
+
+	[Export(PropertyHint.Range, "0, 1.0")]
+	private float exhaustVolume = 0.5f;
+
+	[Export(PropertyHint.Range, "0, 1.0")]
+	private float pistonTimingRandomness = 0.05f;
+
+	[Export(PropertyHint.Range, "0, 5.0")]
+	private float straightPipeLengthMeters = 3f;
+
 	float phase = 0;
 	float secondPhase = 0;
 
@@ -59,7 +72,12 @@ public class engine_noise : Node
 
 	private LowPassFilter vibrationsLowPass;
 
-	private WaveGuide waveGuide;
+	private LowPassFilter pistonRnadomnessLowPass;
+
+	// Alpha to Exhaust collector, beta to muffler elements
+	private WaveGuide straightPipe;
+
+	private WaveGuide[] mufflerElements;
 
 	// Start with a single Cylinder
 	private Cylinder[] cylinders;
@@ -72,7 +90,10 @@ public class engine_noise : Node
 	{
 		noiseLowPass = new LowPassFilter(noiseLowPassCutoff, sampleRate);
 		vibrationsLowPass = new LowPassFilter(vibrationsLowPassCutoff, sampleRate);
+		pistonRnadomnessLowPass = new LowPassFilter(pistonRandomnessLowPassCutoff, sampleRate);
+		straightPipe = new WaveGuide(toDelayTime(straightPipeLengthMeters), 6.173e-2f, 1.65e-3f, sampleRate);
 		initCylinders();
+		initMufflerElements();
 		AudioStreamPlayer player = GetNode<AudioStreamPlayer>("Player");
 		playback = (AudioStreamGeneratorPlayback)player.GetStreamPlayback();
 		FillBuffer(0);
@@ -85,22 +106,32 @@ public class engine_noise : Node
 
 		for (int i = 0; i < cylinderCount; i++)
 		{
-			cylinders[i] = new Cylinder(sampleRate, 0.25f);
+			cylinders[i] = new Cylinder(sampleRate, 0.25f, i);
 		}
+	}
+
+	private void initMufflerElements()
+	{
+		mufflerElements = new WaveGuide[4] {
+			new WaveGuide(0.001412429378f, 0, 0.14208126f, sampleRate),
+			new WaveGuide(0.001412429378f, 0, 0.14208126f, sampleRate),
+			new WaveGuide(0.001412429378f, 0, 0.14208126f, sampleRate),
+			new WaveGuide(0.001412429378f, 0, 0.14208126f, sampleRate)
+		};
+	}
+
+	private float toDelayTime(float lengthMeters)
+	{
+		// 487 m/s is approximately the speed on sound in 260c which is the approximate temp in a cylinder
+		return lengthMeters / 487f;
 	}
 
 	//  // Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(float delta)
 	{
-		if (noiseLowPass.getAlpha(noiseLowPassCutoff) != noiseLowPass.alpha)
-		{
-			noiseLowPass.setCutOff(noiseLowPassCutoff);
-		}
-
-		if (vibrationsLowPass.getAlpha(vibrationsLowPassCutoff) != vibrationsLowPass.alpha)
-		{
-			vibrationsLowPass.setCutOff(vibrationsLowPassCutoff);
-		}
+		noiseLowPass.setCutOff(noiseLowPassCutoff);
+		vibrationsLowPass.setCutOff(vibrationsLowPassCutoff);
+		pistonRnadomnessLowPass.setCutOff(pistonRandomnessLowPassCutoff);
 
 		FillBuffer(delta);
 	}
@@ -177,16 +208,53 @@ public class engine_noise : Node
 			crankPos = (crankPos + crankPosInc) % 1.0f;
 
 			float sample = 0;
+			float intake = 0;
+			float vibrations = 0;
+			float exhaust = 0;
+
+			WaveGuideOutput totalMuffletWGOut = new WaveGuideOutput();
+
+			for (int j = 0; j < mufflerElements.Length; j++)
+			{
+				WaveGuideOutput elOut = mufflerElements[j].Pop();
+				totalMuffletWGOut.firstChamberOut += elOut.firstChamberOut;
+				totalMuffletWGOut.secondChamberOut += elOut.secondChamberOut;
+			}
+
+			float mufflerOut = totalMuffletWGOut.secondChamberOut;
+
+			WaveGuideOutput straightPipeWGoutput = straightPipe.Pop();
+			float pipeToExtractors = straightPipeWGoutput.firstChamberOut / cylinders.Length;
 
 			// This ensures equal distribution of pistons firing over time, if the distribution is not equal we will get growling
 			float pistonOffset = 1 / cylinders.Length;
 
 			for (int j = 0; j < cylinders.Length; j++)
 			{
-				float crankOffset = (j + 1) * pistonOffset / 2;
-				CylinderOut cylinderOut = cylinders[j].Write(crankPos + crankOffset, throttle, noiseLowPass.filter(Noise()));
-				sample += cylinderOut.intakeOut * intakeVolume + vibrationsLowPass.filter(cylinderOut.vibrationsOut) * vibrationsVolume;
+				float pistonRandomness = pistonRnadomnessLowPass.filter(Noise()) * pistonTimingRandomness;
+				float crankOffset = (j + 1) * pistonOffset / 2 + pistonRandomness;
+				CylinderOut cylinderOut = cylinders[j].Write(crankPos + crankOffset, throttle, noiseLowPass.filter(Noise()), pipeToExtractors);
+				intake += cylinderOut.intakeOut;
+				vibrations += cylinderOut.vibrationsOut;
+				exhaust += cylinderOut.exhaust;
+				// GD.Print($"Cylinder {j} Exhaust: {cylinderOut.exhaust}");
 			}
+
+
+			straightPipe.Push(totalMuffletWGOut.firstChamberOut, exhaust);
+
+			float pipeToMufflers = straightPipeWGoutput.secondChamberOut / mufflerElements.Length;
+
+			for (int j = 0; j < mufflerElements.Length; j++)
+			{
+				mufflerElements[j].Push(0, pipeToMufflers);
+			}
+
+			// GD.Print($"Muffler out: {mufflerOut:F7}");
+
+			// sample += intake * intakeVolume + vibrationsLowPass.filter(vibrations) * vibrationsVolume + mufflerOut * 10000;
+			sample += intake * intakeVolume + vibrationsLowPass.filter(vibrations) * vibrationsVolume + mufflerOut * exhaustVolume;
+
 
 			buffer[i] = Vector2.One * sample;
 		}

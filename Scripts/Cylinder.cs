@@ -7,10 +7,13 @@ struct CylinderOut
 	public float intakeOut;
 	public float vibrationsOut;
 
-	public CylinderOut(float intakeOut, float vibrationsOut)
+	public float exhaust;
+
+	public CylinderOut(float intakeOut, float vibrationsOut, float exhaust)
 	{
 		this.intakeOut = intakeOut;
 		this.vibrationsOut = vibrationsOut;
+		this.exhaust = exhaust;
 	}
 }
 
@@ -38,28 +41,38 @@ class Cylinder
 
 	private float pistonPos = 0;
 
-	// Alpha is split into half to intake and exauhst
+	/// <summary>
+	/// Second chamber output is split into half to intake and exauhst
+	/// </summary>
 	public WaveGuide cylinderChamber;
 
-	// Alpha is free end, beta is cylinder end
+	/// <summary>
+	/// Alpha is free end, beta is cylinder end
+	/// </summary>
 	public WaveGuide intakeCollector;
 
-	// Alpha is free end, beta is cylinder end
-	public WaveGuide exhaustCollector;
+	/// <summary>
+	/// First chamber out is to straight pipe end, second chamber is cylinder end
+	/// </summary>
+	public WaveGuide extractor;
 
-	public Cylinder(int sampleRate, float firingTime)
+	private int index;
+
+	public Cylinder(int sampleRate, float firingTime, int index)
 	{
 		this.firingTime = firingTime;
 
 		// Delay time of a VQ35DE cylinder: 1.67 * 10^-4, this is one way trip
-		cylinderChamber = new WaveGuide(1.67e-4f, -1, 1, sampleRate);
+		cylinderChamber = new WaveGuide(1.67e-4f, -1, .7f, sampleRate);
 
 		// The delay is taken from https://github.com/DasEtwas/enginesound/blob/master/src/default.esc
-		intakeCollector = new WaveGuide(1.458e-4f, -0.5f, 0, sampleRate);
-		exhaustCollector = new WaveGuide(1.458e-4f, 0.1f, 0, sampleRate);
+		intakeCollector = new WaveGuide(1.458e-4f, 0, -0.5f, sampleRate);
+		extractor = new WaveGuide(1.458e-4f, 0, 0.1f, sampleRate);
+
+		this.index = index;
 	}
 
-	public CylinderOut Write(float crankPos, float throttle, float intakeNoise)
+	public CylinderOut Write(float crankPos, float throttle, float intakeNoise, float prevStraightPipe)
 	{
 		pistonPos = PistonMotion(crankPos);
 		float cylinderIn = FuelIgnition(crankPos, firingTime) * throttle + pistonPos;
@@ -75,31 +88,41 @@ class Cylinder
 		WaveGuideOutput cylinderWgOut = cylinderChamber.Pop(maxDelay * normalizedCylinderVolume);
 
 		WaveGuideOutput intakeWgOut = intakeCollector.Pop();
-		WaveGuideOutput exhaustWgOut = exhaustCollector.Pop();
+		WaveGuideOutput exhaustWgOut = extractor.Pop();
 
 		float intakeOut = intakeWgOut.firstChamberOut; // Free end
-		float cylOut = cylinderWgOut.firstChamberOut;
+		float cylOut = cylinderWgOut.secondChamberOut;
 
 		float inValve = intakeValve(crankPos); // 1 is fully open, 0 is closed
 		float exValve = exhaustValve(crankPos); // 1 is fully open, 0 is closed
 
-		intakeCollector.beta = (1 - inValve);
-		exhaustCollector.beta = (1 - exValve);
+		intakeCollector.alpha = (.7f - .4f * inValve);
+		extractor.beta = (.7f - .4f * exValve);
 
-		cylinderChamber.alpha = Mathf.Max(1 - inValve, 1 - exValve); // Since the valves are at the same "end" of the cylinder they should affect the same coefficient
-																																 // cylinderChamber.beta = 1 - exValve;
+		cylinderChamber.alpha = Mathf.Max(.7f - .4f * inValve, .7f - .4f * exValve); // Since the valves are at the same "end" of the cylinder they should affect the same coefficient
+		// cylinderChamber.alpha = 1 - inValve;
+		// cylinderChamber.beta = 1 - exValve;
 
-		float toIntake = cylOut * .5f * (1 - inValve);
-		float toExhaust = cylOut * .5f * (1 - exValve);
-		intakeCollector.Push(0, toIntake + intakeNoise);
-		exhaustCollector.Push(0, toExhaust);
+		float toIntake = cylOut * inValve;
+		float toExhaust = cylOut * exValve;
+		// float toIntake = cylOut * .5f * (1 - inValve);
+		// float toExhaust = cylOut * .5f * (1 - exValve);
+		
+		// intakeCollector.Push(0, toIntake + intakeNoise * inValve);
+		intakeCollector.Push(intakeNoise * inValve + toIntake, 0);
 
-		float fromIntakeToCylinder = intakeWgOut.secondChamberOut * inValve;
-		float fromExhaust = exhaustWgOut.secondChamberOut * exValve;
+		// GD.Print($"Cylinder {index} toExhaust: {toExhaust}");
 
-		cylinderChamber.Push(fromIntakeToCylinder + fromExhaust + cylinderIn, 0);
+		extractor.Push(toExhaust, prevStraightPipe);
 
-		return new CylinderOut(intakeOut, lastOutput);
+		// float fromIntakeToCylinder = intakeWgOut.secondChamberOut * inValve;
+		// float fromExhaust = exhaustWgOut.secondChamberOut * exValve;
+		float fromIntakeToCylinder = intakeWgOut.secondChamberOut;
+		float fromExhaust = exhaustWgOut.secondChamberOut;
+
+		cylinderChamber.Push(fromIntakeToCylinder + fromExhaust, cylinderIn);
+
+		return new CylinderOut(intakeOut, lastOutput, exhaustWgOut.firstChamberOut);
 	}
 
 	private float exhaustValve(float crankPos)
