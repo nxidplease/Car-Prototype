@@ -2,14 +2,14 @@ using Godot;
 
 struct WaveGuideOutput {
 
-	public WaveGuideOutput(float firstChamberOut, float secondChamberOut)
+	public WaveGuideOutput(float fwdChamberOut, float revChamberOut)
 	{
-		this.firstChamberOut = firstChamberOut;
-		this.secondChamberOut = secondChamberOut;
+		this.fwdChamberOut = fwdChamberOut;
+		this.revChamberOut = revChamberOut;
 	}
 
-	public float firstChamberOut;
-	public float secondChamberOut;
+	public float fwdChamberOut;
+	public float revChamberOut;
 }
 
 /// <summary>
@@ -22,33 +22,33 @@ struct WaveGuideOutput {
 class WaveGuide
 {
 	const float MAX_WAVE_GUIDE_AMP = 20f;
-	public DelayLine firstChamber;
-	public DelayLine secondChamber;
+	public DelayLine fwdChamber;
+	public DelayLine revChamber;
 
 	// reflection factor for the first chamber
-	public float alpha;
+	public float revOutRefl;
 
 	// reflection factor for the second chamber
-	public float beta;
+	public float fwdOutRefl;
 
-	float prevFirstChamberOut;
+	float prevFwdChamberOut;
 
-	float prevSecondChamberOut;
+	float prevRevChamberOut;
 
-	public WaveGuide(float delaySeconds, float alpha, float beta, int sampleRate)
+	public WaveGuide(float delaySeconds, float revOutRefl, float fwdOutRefl, int sampleRate)
 	{
-		firstChamber = new DelayLine(delaySeconds, sampleRate);
-		secondChamber = new DelayLine(delaySeconds, sampleRate);
-		this.alpha = alpha;
-		this.beta = beta;
+		fwdChamber = new DelayLine(delaySeconds, sampleRate);
+		revChamber = new DelayLine(delaySeconds, sampleRate);
+		this.revOutRefl = revOutRefl;
+		this.fwdOutRefl = fwdOutRefl;
 	}
 
 	public WaveGuideOutput Pop(float effectiveLengthSeconds = -1)
 	{
-		prevFirstChamberOut = Dampen(firstChamber.Pop(effectiveLengthSeconds));
-		prevSecondChamberOut = Dampen(secondChamber.Pop(effectiveLengthSeconds));
+		prevFwdChamberOut = Dampen(fwdChamber.Pop(effectiveLengthSeconds));
+		prevRevChamberOut = Dampen(revChamber.Pop(effectiveLengthSeconds));
 
-		return new WaveGuideOutput(prevFirstChamberOut * (1 - Mathf.Abs(beta)), prevSecondChamberOut * (1 - Mathf.Abs(alpha)));
+		return new WaveGuideOutput(prevFwdChamberOut * (1 - Mathf.Abs(fwdOutRefl)), prevRevChamberOut * (1 - Mathf.Abs(revOutRefl)));
 	}
 
 	private float Dampen(float sample)
@@ -61,12 +61,12 @@ class WaveGuide
 		return Mathf.Sign(sample) * -1 / (sample - MAX_WAVE_GUIDE_AMP + 1) + 1 + MAX_WAVE_GUIDE_AMP;
 	}
 
-	public void Push(float first_in, float second_in)
+	public void Push(float fwd_in, float rev_in)
 	{
-		float firstChamberIn = prevSecondChamberOut * alpha + first_in;
-		float secondChamberIn = prevFirstChamberOut * beta + second_in;
+		float fwdChamberIn = prevRevChamberOut * revOutRefl + fwd_in;
+		float revChamberIn = prevFwdChamberOut * fwdOutRefl + rev_in;
 
-		firstChamber.Push(firstChamberIn);
-		secondChamber.Push(secondChamberIn);
+		fwdChamber.Push(fwdChamberIn);
+		revChamber.Push(revChamberIn);
 	}
 }
