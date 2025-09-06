@@ -72,15 +72,30 @@ func getSpringForce():
 	else:
 #		$Tyre.translation = -transform.basis.y * default_dist_from_groud
 		return Vector3.ZERO
+
+var prevWheelDelta: float = 0;
 		
 func updateAngualrVel(brake_input: float, dt: float, engine_torque: float, expected_rpm: float):
 #	if (expected_rpm > 0):
 #		print('WOW')
-	var expected_angular_vel = (expected_rpm / 60.0) * 2.0 * PI;
-	var drive_change = (engine_torque / 500.0) * (expected_angular_vel - angular_vel)
+	var expected_angular_vel = (expected_rpm / 60.0) * TAU;
+#	var drive_change = (engine_torque / 500.0) * (expected_angular_vel - angular_vel)
+
+	var absEngTorque = abs(engine_torque);
+	var numerator_delta = dt * (absEngTorque * expected_angular_vel - sign(angular_vel) * car_body.brake_coefficient * brake_input)
+	var denom = 1 + dt * (absEngTorque + car_body.rr_coefficient)
+	
+	var diff = expected_angular_vel - angular_vel
+	var diff_change = diff - prevWheelDelta
+	
+	Logger.info("Expected: %5.2f Actual: %5.2f Diff: %5.2f Diff Change: %5.2f" % [expected_angular_vel, angular_vel, expected_angular_vel - angular_vel, diff_change])
+	
+	prevWheelDelta = diff
+	
+	angular_vel = (angular_vel + numerator_delta) / denom
 #	var drive_change = 5 * (expected_angular_vel - angular_vel)
 #	var drive_change = engine_torque * (expected_angular_vel - angular_vel)
-	_updateAngularVel(drive_change, brake_input, dt);
+#	_updateAngularVel(drive_change, brake_input, dt);
 	
 func updateAngularVelNonDriven(brake_input: float, dt: float, long_force: float):
 	var long_torque = -long_force * tyre_radius
@@ -179,8 +194,8 @@ func get_velocity_in_rolling_dir() -> Vector3:
 func get_rolling_rpm() -> float:
 	var velocity_in_rolling_dir = get_velocity_in_rolling_dir()
 	
-	return (velocity_in_rolling_dir.dot(global_transform.basis.z) / (2 * PI * tyre_radius)) * 60
-#	return velocity_in_rolling_dir.dot(global_transform.basis.z) / 2 * PI * tyre_radius
+#	return (velocity_in_rolling_dir.dot(global_transform.basis.z) / (2 * PI * tyre_radius)) * 60
+	return angular_vel / TAU * 60
 
 func calc_slip_ratio() -> float:
 #	var rolling_speed = (rolling_rpm / 60) * 2 * PI * tyre_radius

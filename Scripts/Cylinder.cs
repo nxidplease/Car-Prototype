@@ -152,6 +152,7 @@ class Cylinder
 			return 0;
 		}
 
-		return Mathf.Sin(Mathf.Tau * (crankPos * t + .5f));
+		// return Mathf.Sin(Mathf.Tau * (crankPos * t + .5f));
+		return Mathf.Sin(Mathf.Tau * crankPos / t);
 	}
 }

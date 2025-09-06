@@ -14,6 +14,8 @@ var camera_index = 1
 
 func _ready():
 	$Car.carEngine.connect("update_rpm", self, "_on_rpm_update")
+	Logger.add_appender(FileAppender.new("user://logs/log.txt"))
+	Logger.set_logger_format(Logger.LOG_FORMAT_MORE)
 
 func _on_rpm_update(rpm: int):
 	$UI/RPM.text = rpm_str % rpm

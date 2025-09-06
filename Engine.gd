@@ -21,7 +21,7 @@ export(int, -10, 8000) var d = 6000
 export(int, -10, 4000) var f = 1850
 
 
-export(float, 0.1, 0.8, 0.05) var engine_break = 0.3
+export(float, 0.001, 2.5, 0.05) var engine_break = 0.3
 
 export(float, 0.001, 0.9, 0.005) var engine_friction = 0.7
 # R, N, 1, 2, 3, 4, 5
@@ -97,7 +97,8 @@ func update_engine(rolling_rpm: float, dt: float):
 	
 	# If not in N gear sync engine to wheels
 	if currentGear != 1:
-		 rpmChange += engine_break * (clutch * rolling_eng_rpm - currentRpm)
+		Logger.info("Engine rpm: %.3f rpm according to wheels: %.3f diff: %.3f" %[currentRpm, rolling_eng_rpm, rolling_eng_rpm - currentRpm])
+		rpmChange += engine_break * (clutch * rolling_eng_rpm - currentRpm)
 	
 	currentRpm = clamp(currentRpm + rpmChange * dt, 1000, 8500)
 	emit_signal("update_rpm", currentRpm)

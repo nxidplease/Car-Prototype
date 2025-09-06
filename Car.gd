@@ -22,7 +22,7 @@ export(int) var maxEngineForce
 
 export(float) var tractionForceMag = 50.0
 
-export(float) var rr_coefficient = 0.01
+export(float) var rr_coefficient = 0.001
 
 export(float) var brake_coefficient = 1.0
 
@@ -116,7 +116,7 @@ func _get_avg_angular_vel_of_driven_wheels():
 		var wheel:Wheel = wheels[wheelArrIndex[wheelName]]
 		avgVel += wheel.get_rolling_rpm()
 		
-	return avgVel / drivenWheels[drivetrain].size()
+	return avgVel / float(drivenWheels[drivetrain].size())
 
 func _integrate_forces(state: PhysicsDirectBodyState):
 	_steer_wheels(state)
@@ -275,7 +275,7 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 		#totalForce += calcEngineForce(wheel, state)
 		
 	if drivenWheels[drivetrain].has(wheel.name):
-		wheel.updateAngualrVel(brake_input, state.step, carEngine.get_engine_torque(), carEngine.get_rpm_at_wheels())
+		wheel.updateAngualrVel(brake_input, state.step, carEngine.get_torque_at_wheels(), carEngine.get_rpm_at_wheels())
 	else:
 		wheel.updateAngularVelNonDriven(brake_input, state.step, tracForce.dot(forwardGroundDir))
 	
@@ -401,7 +401,7 @@ func adjust_braking():
 	else:
 		brake_input = max(brake_input - 0.05, 0)
 		
-	carEngine.clutch = 1 - brake_input
+#	carEngine.clutch = 1 - brake_input
 	
 ## point must be in world space since car_body.transformation.origin is in world space
 func get_point_velocity (point :Vector3)->Vector3:
