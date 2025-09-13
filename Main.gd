@@ -14,11 +14,16 @@ var camera_index = 1
 
 func _ready():
 	$Car.carEngine.connect("update_rpm", self, "_on_rpm_update")
+	$Car.carEngine.connect("gear_shift", self, "_on_gear_shift")
 	Logger.add_appender(FileAppender.new("user://logs/log.txt"))
 	Logger.set_logger_format(Logger.LOG_FORMAT_MORE)
 
 func _on_rpm_update(rpm: int):
 	$UI/RPM.text = rpm_str % rpm
+	
+func _on_gear_shift(new_gear_index: int):
+		$UI/Gear.text = "Gear: %d" % ($Car.carEngine.currentGear - 1)
+	
 
 func _on_Car_update_offset(wheel, offset, distance, topPos, colPos):
 	match wheel:
@@ -53,7 +58,7 @@ func _physics_process(_delta):
 	$UI/Engine.text = "Engine: %s %s %s %s" % $Car.engineForce
 	$UI/Brake.text = "Brake: %s %s %s %s" % $Car.brakeForce
 	$UI/RR_force.text = "RR force: %s %s %s %s" % $Car.rrForce
-	$UI/SideSlip.text = "Side slip(FR, FL, RR, RL): %.2f, %.2f, %.2f, %.2f" % $Car.sideSlipRatio
+	$UI/SideSlip.text = "Side slip(FR, FL, RR, RL): %4.2f, %4.2f, %4.2f, %4.2f" % $Car.sideSlipRatio
 	$"UI/Steering(L\\R)".text = "Steering(L\\R): %.2f, %.2f" % $Car.wheelSteerAngle
 	$UI/Heading.text = "Heading: %.0f" % rad2deg($Car.global_rotation.y)
 	$UI/GripFactor.text = "Grip factor: %3.2f %3.2f %3.2f %3.2f" % $Car.gripFactors
@@ -88,11 +93,9 @@ func _control_car():
 		
 	if Input.is_action_just_pressed("gear_up"):
 		$Car.carEngine.gear_up()
-		$UI/Gear.text = "Gear: %d" % ($Car.carEngine.currentGear - 1)
 		
 	if Input.is_action_just_pressed("gear_down"):
 		$Car.carEngine.gear_down()
-		$UI/Gear.text = "Gear: %d" % ($Car.carEngine.currentGear - 1)
 		
 	($Car as Car).adjust_braking()
 	

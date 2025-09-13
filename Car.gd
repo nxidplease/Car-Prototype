@@ -50,6 +50,16 @@ const drivenWheels = {
 export(Drivetrain) var drivetrain = Drivetrain.RWD
 export(float) var min_vel_for_slip = 1.0
 
+export(float) var fwd_lat_pacejka_b = 10.0
+export(float) var fwd_lat_pacejka_c = 1.9
+export(float) var fwd_lat_pacejka_d = 1.0
+export(float) var fwd_lat_pacejka_e = 0.97
+
+export(float) var back_lat_pacejka_b = 10.0
+export(float) var back_lat_pacejka_c = 1.9
+export(float) var back_lat_pacejka_d = 1.0
+export(float) var back_lat_pacejka_e = 0.97
+
 const long_pacejka = {
 	"b": 0.8,
 	"d": 6.0,
@@ -57,12 +67,19 @@ const long_pacejka = {
 	"e": 1.0
 }
 
-const lat_pacejka = {
-	"b": 10,
-	"c": 1.9,
-	"d": 1.0,
-	"e": 0.97
-}
+var lat_pacejka_per_wheel: Array = [
+	PacejkaParams.new(fwd_lat_pacejka_b, fwd_lat_pacejka_c, fwd_lat_pacejka_d, fwd_lat_pacejka_e), 
+	PacejkaParams.new(fwd_lat_pacejka_b, fwd_lat_pacejka_c, fwd_lat_pacejka_d, fwd_lat_pacejka_e),
+	PacejkaParams.new(back_lat_pacejka_b, back_lat_pacejka_c, back_lat_pacejka_d, back_lat_pacejka_e),
+	PacejkaParams.new(back_lat_pacejka_b, back_lat_pacejka_c, back_lat_pacejka_d, back_lat_pacejka_e),
+]
+
+var long_pacejka_per_wheel: Array = [
+	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
+]
 
 onready var wheels = [$FR, $FL, $RR, $RL]
 const wheelArrIndex = {
@@ -123,6 +140,19 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 	var wheelForces = []
 	wheelForces.resize(4)
 	
+	for i in range(4):
+		if (i <= 1):
+			# Front
+			lat_pacejka_per_wheel[i].b = fwd_lat_pacejka_b
+			lat_pacejka_per_wheel[i].c = fwd_lat_pacejka_c
+			lat_pacejka_per_wheel[i].d = fwd_lat_pacejka_d
+			lat_pacejka_per_wheel[i].e = fwd_lat_pacejka_e
+		else:
+			lat_pacejka_per_wheel[i].b = back_lat_pacejka_b
+			lat_pacejka_per_wheel[i].c = back_lat_pacejka_c
+			lat_pacejka_per_wheel[i].d = back_lat_pacejka_d
+			lat_pacejka_per_wheel[i].e = back_lat_pacejka_e
+	
 	var grounded = true
 	carEngine.adjust_throttle(state.step)
 	carEngine.update_engine(_get_avg_angular_vel_of_driven_wheels(), state.step)
@@ -175,9 +205,9 @@ func update_gizmos(wheelRayCast: Node, totalForce: Vector3, wheel: Spatial, scal
 	var yScale = totalForce.dot(wheel.global_transform.basis.y)
 	var zScale = totalForce.dot(wheel.global_transform.basis.z)
 	
-	var xGizmo = wheelRayCast.get_node("Tyre/Gizmos/X_Anchor");
-	var yGizmo = wheelRayCast.get_node("Tyre/Gizmos/Y_Anchor");
-	var zGizmo = wheelRayCast.get_node("Tyre/Gizmos/Z_Anchor");
+	var xGizmo = wheelRayCast.get_node("TyrePos/Gizmos/X_Anchor");
+	var yGizmo = wheelRayCast.get_node("TyrePos/Gizmos/Y_Anchor");
+	var zGizmo = wheelRayCast.get_node("TyrePos/Gizmos/Z_Anchor");
 	
 	xGizmo.scale.x = xScale / scaleFactor
 	yGizmo.scale.x = yScale / scaleFactor
@@ -248,7 +278,10 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	emit_signal("update_slip_ratio", wheelIndex, slip_ratio)
 	
 	var tyreForces: Vector3 = tracForce + steerForce
-	tyreForces.limit_length(max_trac_force)
+	
+	if steerForce.length_squared() > 0 || tracForce.length_squared() > 0:
+		var scaleToCircleOfFriction = min(1, pow(max_trac_force, 2) / sqrt(steerForce.length_squared() + tracForce.length_squared()))
+		tyreForces *= scaleToCircleOfFriction
 	
 #	totalForce += tracForce
 #	totalForce += steerForce
@@ -290,7 +323,8 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 	var velocity_at_wheel = get_point_velocity(ws_wheel_location)
 	var ground_vel_at_wheel = velocity_at_wheel - velocity_at_wheel.project(Vector3.UP)
 	
-	if ground_vel_at_wheel.length() <= 0:
+	if ground_vel_at_wheel.length() <= 0.3:
+#	if ground_vel_at_wheel.length() <= 0:
 #	if velocity_at_wheel.length() <= 0:
 		return Vector3.ZERO
 	
@@ -300,8 +334,9 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 #	var pure_side_dir = wheel.global_transform.basis.x - wheel.global_transform.basis.x.project(Vector3.UP)
 	var pure_side_dir = wheel.global_transform.basis.x
 	var steering_vel = ground_vel_at_wheel.project(pure_side_dir)
-	
 	var steering_vel_scalar = ground_vel_at_wheel.dot(pure_side_dir)
+	var forward_vel_scalar = ground_vel_at_wheel.dot(wheel.global_transform.basis.z)
+	var slip_angle = atan2(-steering_vel_scalar, forward_vel_scalar)
 	
 	var side_to_total_vel_ratio = steering_vel.length() / ground_vel_at_wheel.length()
 	
@@ -310,6 +345,7 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 	
 	
 	var grip_factor
+	var lat_pacejka = lat_pacejka_per_wheel[wheelArrIndex[wheel.name]]
 	
 	match wheel.name:
 		"RR", "RL":
@@ -317,12 +353,15 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 		"FR", "FL":
 			grip_factor = front_grip_curve.interpolate(side_to_total_vel_ratio)
 	
-	sideSlipRatio[wheelArrIndex[wheel.name]] = side_to_total_vel_ratio
+#	sideSlipRatio[wheelArrIndex[wheel.name]] = side_to_total_vel_ratio
+	sideSlipRatio[wheelArrIndex[wheel.name]] = rad2deg(slip_angle)
 #	grip_factor = 1.0
 	
 	gripFactors[wheelArrIndex[wheel.name]] = grip_factor
 	
-	var steer_force: Vector3 = -steering_vel * mass/4.0 * grip_factor / state.step
+#	var steer_force: Vector3 = -steering_vel * mass/4.0 * grip_factor / state.step
+
+	var steer_force: Vector3 = wheel.global_transform.basis.x * pacejka(slip_angle, lat_pacejka.b, lat_pacejka.c, lat_pacejka.d * max_steer_force, lat_pacejka.e)
 	
 	var size_before: float = steer_force.length()
 	

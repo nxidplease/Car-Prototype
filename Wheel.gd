@@ -44,7 +44,7 @@ func calc_spring_force_for_wheel(collisionPoint: Vector3):
 	dampening_force = -velocity_to_offset * damping_strength
 	spring_force = spring_strength * curr_offset
 	
-	if curr_offset < -0.2:
+	if curr_offset < -1.1:
 		return 0
 		
 	var force_mag = spring_force + dampening_force
@@ -84,13 +84,7 @@ func updateAngualrVel(brake_input: float, dt: float, engine_torque: float, expec
 	var absEngTorque = abs(engine_torque);
 	var numerator_delta = dt * (absEngTorque * expected_angular_vel - sign(angular_vel) * car_body.brake_coefficient * brake_input)
 	var denom = 1 + dt * (absEngTorque + car_body.rr_coefficient)
-	
-	var diff = expected_angular_vel - angular_vel
-	var diff_change = diff - prevWheelDelta
-	
-	Logger.info("Expected: %5.2f Actual: %5.2f Diff: %5.2f Diff Change: %5.2f" % [expected_angular_vel, angular_vel, expected_angular_vel - angular_vel, diff_change])
-	
-	prevWheelDelta = diff
+#
 	
 	angular_vel = (angular_vel + numerator_delta) / denom
 #	var drive_change = 5 * (expected_angular_vel - angular_vel)
@@ -113,7 +107,7 @@ func getDrivenForce(tracForceMag: float, max_trac_force: float) -> Dictionary:
 	if(abs(tracForceMag) <= max_trac_force ||  velocity_in_rolling_dir.length() < 1.0):
 		long_force = clamp(tracForceMag, -max_trac_force, max_trac_force)
 	else:
-		var long_pacejka = car_body.long_pacejka
+		var long_pacejka = car_body.long_pacejka_per_wheel[car_body.wheelArrIndex[name]]
 		slip_ratio = calc_slip_ratio()
 		long_force = car_body.pacejka(slip_ratio, long_pacejka.b, long_pacejka.c, max_trac_force, long_pacejka.e)
 		
@@ -140,7 +134,7 @@ func getUndrivenForce(max_friction: float) -> Dictionary:
 		long_force = clamp(long_force, -max_friction, max_friction)
 	else:		
 		slip_ratio = calc_slip_ratio()
-		var long_pacejka = car_body.long_pacejka
+		var long_pacejka = car_body.long_pacejka_per_wheel[car_body.wheelArrIndex[name]]
 		long_force = car_body.pacejka(slip_ratio, long_pacejka.b, long_pacejka.c, max_friction, long_pacejka.e)
 	
 		
@@ -161,15 +155,15 @@ func _updateAngularVel(drive_change: float, brake_input: float, dt: float):
 #		print("%.0f %.3f %.3f" % [drive_change, angularVelChange * dt, angular_vel])
 		
 func get_wheel_body_space_location() -> Vector3:
-	return transform.xform($Tyre.translation)
+	return transform.xform($TyrePos.translation)
 	
 func _process(_delta):
 	#force_raycast_update()
 	#force_update_transform()
 	if is_colliding():
-		$Tyre.translation = to_local(get_collision_point()) + transform.basis.y*tyre_radius
+		$TyrePos.translation = to_local(get_collision_point()) + transform.basis.y*tyre_radius
 	else:
-		$Tyre.translation = -transform.basis.y * default_dist_from_groud
+		$TyrePos.translation = -transform.basis.y * default_dist_from_groud
 	
 		
 func getProjectedOnGround(direction: Vector3):

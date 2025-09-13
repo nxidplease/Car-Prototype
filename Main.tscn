@@ -66,9 +66,11 @@ carEngineNode = NodePath("CarEngine")
 maxSpeed = 50
 maxEngineForce = 2500
 rr_coefficient = 0.0005
-brake_coefficient = 2.5
+brake_coefficient = 50.0
 steering_speed_deg = 90.0
-max_steering_angle_deg = 25.0
+max_steering_angle_deg = 30.0
+back_lat_pacejka_b = 5.4
+back_lat_pacejka_d = 0.95
 
 [node name="CameraGimbal" type="Spatial" parent="Car"]
 
@@ -77,12 +79,14 @@ transform = Transform( -4.37114e-08, -0.0259152, 0.999664, 0, 0.999664, 0.025915
 
 [node name="CarEngine" type="Node" parent="Car"]
 script = ExtResource( 10 )
-a = 350
-b = 240
-c = 1.2
-d = 3570
-f = 1800
+a = 400
+b = 117
+c = 1.0
+d = 1300
+f = 4000
+engine_break = 0.7
 engine_friction = 0.025
+shift_duration_sec = 0.25
 
 [node name="EngineSound" type="Node" parent="Car"]
 script = ExtResource( 11 )
@@ -97,15 +101,17 @@ pistonTimingRandomness = 0.1
 
 [node name="Player" type="AudioStreamPlayer" parent="Car/EngineSound"]
 stream = SubResource( 8 )
-volume_db = -12.0
+volume_db = -6.0
 
 [node name="FollowCamera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.949612, 0.313429, 0, -0.313429, 0.949612, 0, 3.4577, -175.17 )
 current = true
 script = ExtResource( 4 )
 car_path = NodePath("../Car")
-up_offset = 1.0
-back_offset = 2.7
+up_offset = 0.652
+back_offset = 2.262
+look_ahead_dist = 2.0
+spring_strength = 25.0
 
 [node name="UI" type="Control" parent="."]
 anchor_right = 1.0

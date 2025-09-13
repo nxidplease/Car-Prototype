@@ -1,9 +1,8 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://Car.gd" type="Script" id=1]
 [ext_resource path="res://Wheel.gd" type="Script" id=2]
 [ext_resource path="res://Nissan_350Z_body.tscn" type="PackedScene" id=3]
-[ext_resource path="res://Models/350z/wheels/right/Nissan_350Z_right_wheel.glb" type="PackedScene" id=4]
 [ext_resource path="res://Models/350z/wheels/left/Nissan_350Z_single_wheel.glb" type="PackedScene" id=5]
 [ext_resource path="res://Scripts/Tyre.gd" type="Script" id=6]
 
@@ -58,36 +57,39 @@ default_dist_from_groud = 0.5
 damping_strength = 93.75
 car_body_path = NodePath("..")
 
-[node name="Tyre" parent="RL" instance=ExtResource( 5 )]
-transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, -0.5, 0 )
-script = ExtResource( 6 )
+[node name="TyrePos" type="Position3D" parent="RL"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0 )
 
-[node name="Gizmos" type="Spatial" parent="RL/Tyre"]
-visible = false
+[node name="Gizmos" type="Spatial" parent="RL/TyrePos"]
+transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, 0, 0 )
 
-[node name="Y_Anchor" type="Spatial" parent="RL/Tyre/Gizmos"]
+[node name="Y_Anchor" type="Spatial" parent="RL/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, 1.68919, -7.38368e-08, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="RL/Tyre/Gizmos/Y_Anchor"]
+[node name="Y" type="MeshInstance" parent="RL/TyrePos/Gizmos/Y_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 7 )
 skeleton = NodePath("")
 
-[node name="X_Anchor" type="Spatial" parent="RL/Tyre/Gizmos"]
+[node name="X_Anchor" type="Spatial" parent="RL/TyrePos/Gizmos"]
 transform = Transform( 1.68919, 0, 0, 0, 1.68919, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="RL/Tyre/Gizmos/X_Anchor"]
+[node name="Y" type="MeshInstance" parent="RL/TyrePos/Gizmos/X_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 9 )
 skeleton = NodePath("")
 
-[node name="Z_Anchor" type="Spatial" parent="RL/Tyre/Gizmos"]
+[node name="Z_Anchor" type="Spatial" parent="RL/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, -7.38368e-08, 0, -1.68919, 1.68919, -7.38368e-08, -7.38368e-08, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="RL/Tyre/Gizmos/Z_Anchor"]
+[node name="Y" type="MeshInstance" parent="RL/TyrePos/Gizmos/Z_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 11 )
 skeleton = NodePath("")
+
+[node name="Tyre" parent="RL/TyrePos" instance=ExtResource( 5 )]
+transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, 0, 0 )
+script = ExtResource( 6 )
 
 [node name="FL" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.455, 0.065, 0.786 )
@@ -99,36 +101,39 @@ default_dist_from_groud = 0.5
 damping_strength = 93.75
 car_body_path = NodePath("..")
 
-[node name="Tyre" parent="FL" instance=ExtResource( 5 )]
-transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, -0.5, 0 )
-script = ExtResource( 6 )
+[node name="TyrePos" type="Position3D" parent="FL"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0 )
 
-[node name="Gizmos" type="Spatial" parent="FL/Tyre"]
-visible = false
+[node name="Gizmos" type="Spatial" parent="FL/TyrePos"]
+transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, 0, 0 )
 
-[node name="Y_Anchor" type="Spatial" parent="FL/Tyre/Gizmos"]
+[node name="Y_Anchor" type="Spatial" parent="FL/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, 1.68919, -7.38368e-08, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="FL/Tyre/Gizmos/Y_Anchor"]
+[node name="Y" type="MeshInstance" parent="FL/TyrePos/Gizmos/Y_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 7 )
 skeleton = NodePath("")
 
-[node name="X_Anchor" type="Spatial" parent="FL/Tyre/Gizmos"]
+[node name="X_Anchor" type="Spatial" parent="FL/TyrePos/Gizmos"]
 transform = Transform( 1.68919, 0, 0, 0, 1.68919, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="FL/Tyre/Gizmos/X_Anchor"]
+[node name="Y" type="MeshInstance" parent="FL/TyrePos/Gizmos/X_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 9 )
 skeleton = NodePath("")
 
-[node name="Z_Anchor" type="Spatial" parent="FL/Tyre/Gizmos"]
+[node name="Z_Anchor" type="Spatial" parent="FL/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, -7.38368e-08, 0, -1.68919, 1.68919, -7.38368e-08, -7.38368e-08, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="FL/Tyre/Gizmos/Z_Anchor"]
+[node name="Y" type="MeshInstance" parent="FL/TyrePos/Gizmos/Z_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 11 )
 skeleton = NodePath("")
+
+[node name="Tyre" parent="FL/TyrePos" instance=ExtResource( 5 )]
+transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, 0, 0 )
+script = ExtResource( 6 )
 
 [node name="FR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.455, 0.065, 0.786 )
@@ -140,36 +145,39 @@ default_dist_from_groud = 0.5
 damping_strength = 93.75
 car_body_path = NodePath("..")
 
-[node name="Tyre" parent="FR" instance=ExtResource( 4 )]
-transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, -0.5, 0 )
-script = ExtResource( 6 )
+[node name="TyrePos" type="Position3D" parent="FR"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0 )
 
-[node name="Gizmos" type="Spatial" parent="FR/Tyre"]
-visible = false
+[node name="Gizmos" type="Spatial" parent="FR/TyrePos"]
+transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, 0, 0 )
 
-[node name="Y_Anchor" type="Spatial" parent="FR/Tyre/Gizmos"]
+[node name="Y_Anchor" type="Spatial" parent="FR/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, 1.68919, -7.38368e-08, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="FR/Tyre/Gizmos/Y_Anchor"]
+[node name="Y" type="MeshInstance" parent="FR/TyrePos/Gizmos/Y_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 7 )
 skeleton = NodePath("")
 
-[node name="X_Anchor" type="Spatial" parent="FR/Tyre/Gizmos"]
+[node name="X_Anchor" type="Spatial" parent="FR/TyrePos/Gizmos"]
 transform = Transform( 1.68919, 0, 0, 0, 1.68919, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="FR/Tyre/Gizmos/X_Anchor"]
+[node name="Y" type="MeshInstance" parent="FR/TyrePos/Gizmos/X_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 9 )
 skeleton = NodePath("")
 
-[node name="Z_Anchor" type="Spatial" parent="FR/Tyre/Gizmos"]
+[node name="Z_Anchor" type="Spatial" parent="FR/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, -7.38368e-08, 0, -1.68919, 1.68919, -7.38368e-08, -7.38368e-08, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="FR/Tyre/Gizmos/Z_Anchor"]
+[node name="Y" type="MeshInstance" parent="FR/TyrePos/Gizmos/Z_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 11 )
 skeleton = NodePath("")
+
+[node name="Tyre" parent="FR/TyrePos" instance=ExtResource( 5 )]
+transform = Transform( -0.592, 0, -5.17543e-08, 0, 0.592, 0, 5.17543e-08, 0, -0.592, 0, 0, -5.96046e-08 )
+script = ExtResource( 6 )
 
 [node name="RR" type="RayCast" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.455, 0.065, -0.795 )
@@ -181,36 +189,39 @@ default_dist_from_groud = 0.5
 damping_strength = 93.75
 car_body_path = NodePath("..")
 
-[node name="Tyre" parent="RR" instance=ExtResource( 4 )]
-transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, -0.5, 0 )
-script = ExtResource( 6 )
+[node name="TyrePos" type="Position3D" parent="RR"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 5.96046e-08 )
 
-[node name="Gizmos" type="Spatial" parent="RR/Tyre"]
-visible = false
+[node name="Gizmos" type="Spatial" parent="RR/TyrePos"]
+transform = Transform( 0.592, 0, 0, 0, 0.592, 0, 0, 0, 0.592, 0, 0, 0 )
 
-[node name="Y_Anchor" type="Spatial" parent="RR/Tyre/Gizmos"]
+[node name="Y_Anchor" type="Spatial" parent="RR/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, 1.68919, -7.38368e-08, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="RR/Tyre/Gizmos/Y_Anchor"]
+[node name="Y" type="MeshInstance" parent="RR/TyrePos/Gizmos/Y_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 7 )
 skeleton = NodePath("")
 
-[node name="X_Anchor" type="Spatial" parent="RR/Tyre/Gizmos"]
+[node name="X_Anchor" type="Spatial" parent="RR/TyrePos/Gizmos"]
 transform = Transform( 1.68919, 0, 0, 0, 1.68919, 0, 0, 0, 1.68919, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="RR/Tyre/Gizmos/X_Anchor"]
+[node name="Y" type="MeshInstance" parent="RR/TyrePos/Gizmos/X_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 9 )
 skeleton = NodePath("")
 
-[node name="Z_Anchor" type="Spatial" parent="RR/Tyre/Gizmos"]
+[node name="Z_Anchor" type="Spatial" parent="RR/TyrePos/Gizmos"]
 transform = Transform( -7.38368e-08, -1.68919, 0, -7.38368e-08, 0, -1.68919, 1.68919, -7.38368e-08, -7.38368e-08, 0, 0, 1.19209e-07 )
 
-[node name="Y" type="MeshInstance" parent="RR/Tyre/Gizmos/Z_Anchor"]
+[node name="Y" type="MeshInstance" parent="RR/TyrePos/Gizmos/Z_Anchor"]
 transform = Transform( -4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0.344, 0, 0 )
 mesh = SubResource( 11 )
 skeleton = NodePath("")
+
+[node name="Tyre" parent="RR/TyrePos" instance=ExtResource( 5 )]
+transform = Transform( -0.592, 0, 5.17543e-08, 0, 0.592, 0, -5.17543e-08, 0, -0.592, 0, 0, 0 )
+script = ExtResource( 6 )
 
 [connection signal="update_offset" from="RL" to="." method="_on_RayCast_update_offset"]
 [connection signal="update_offset" from="FL" to="." method="_on_RayCast2_update_offset"]
