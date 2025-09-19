@@ -97,7 +97,7 @@ func _control_car():
 	if Input.is_action_just_pressed("gear_down"):
 		$Car.carEngine.gear_down()
 		
-	($Car as Car).adjust_braking()
+	$Car.adjust_braking()
 	
 	if Input.is_action_just_pressed("reset"):
 		$Car.reset()

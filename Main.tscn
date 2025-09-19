@@ -69,8 +69,8 @@ rr_coefficient = 0.0005
 brake_coefficient = 50.0
 steering_speed_deg = 90.0
 max_steering_angle_deg = 30.0
-back_lat_pacejka_b = 5.4
-back_lat_pacejka_d = 0.95
+back_lat_pacejka_b = 7.0
+back_lat_pacejka_d = 0.87
 
 [node name="CameraGimbal" type="Spatial" parent="Car"]
 
@@ -96,7 +96,7 @@ vibrationsLowPassCutoff = 92.34
 pistonRandomnessLowPassCutoff = 57.24
 intakeVolume = 0.017
 vibrationsVolume = 0.02
-exhaustVolume = 0.55
+exhaustVolume = 0.6
 pistonTimingRandomness = 0.1
 
 [node name="Player" type="AudioStreamPlayer" parent="Car/EngineSound"]

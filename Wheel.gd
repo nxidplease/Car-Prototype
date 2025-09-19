@@ -93,7 +93,7 @@ func updateAngualrVel(brake_input: float, dt: float, engine_torque: float, expec
 	
 func updateAngularVelNonDriven(brake_input: float, dt: float, long_force: float):
 	var long_torque = -long_force * tyre_radius
-	var long_drive = long_torque / calc_moment_of_inertia()
+	var long_drive = long_torque / calc_moment_of_inertia_about_X()
 	
 #	print('Slip drive change: %.2f' % long_drive)
 	
@@ -149,7 +149,7 @@ func _updateAngularVel(drive_change: float, brake_input: float, dt: float):
 		- sign(angular_vel) * car_body.brake_coefficient * brake_input \
 		- car_body.rr_coefficient * angular_vel
 #		- car_body.brake_coefficient * brake_input \
-	angular_vel += angularVelChange / calc_moment_of_inertia() * dt
+	angular_vel += angularVelChange / calc_moment_of_inertia_about_X() * dt
 	
 #	if name == 'RR':
 #		print("%.0f %.3f %.3f" % [drive_change, angularVelChange * dt, angular_vel])
@@ -175,10 +175,14 @@ func getProjectedOnGround(direction: Vector3):
 
 
 ## (m * r^2) / 2
-func calc_moment_of_inertia() -> float:
+func calc_moment_of_inertia_about_X() -> float:
 #	var cylinder_mesh := $Tyre.mesh as CylinderMesh
 #	return (pow(cylinder_mesh.height, 2) + 3 * pow(tyre_radius, 2)) * tyre_mass / 12
 	return (tyre_mass * pow(tyre_radius, 2)) / 2
+	
+func calc_moment_of_inertia_about_Y() -> float:
+	# tyre width of front 350z is 225mm
+	return tyre_mass * (3 * pow(tyre_radius, 2) + pow(0.225,2))
 	
 func get_velocity_in_rolling_dir() -> Vector3:
 	var global_velocity_at_wheel = car_body.get_point_velocity(to_global(translation))

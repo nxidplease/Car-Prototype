@@ -26,7 +26,7 @@ export(float) var rr_coefficient = 0.001
 
 export(float) var brake_coefficient = 1.0
 
-export(float) var steering_speed_deg = 20.0
+export(float) var steering_speed_deg: float = 20.0
 
 export(float) var max_steering_angle_deg = 65.0
 
@@ -75,11 +75,13 @@ var lat_pacejka_per_wheel: Array = [
 ]
 
 var long_pacejka_per_wheel: Array = [
-	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
-	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
-	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
-	PacejkaParams.new(0.8, 3.0, 6.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 1.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 1.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 1.0, 1.0),
+	PacejkaParams.new(0.8, 3.0, 1.0, 1.0),
 ]
+
+var forward_sat_pacejka = PacejkaParams.new(66.6667, 1.9, 0.15, 0.97)
 
 onready var wheels = [$FR, $FL, $RR, $RL]
 const wheelArrIndex = {
@@ -89,7 +91,7 @@ const wheelArrIndex = {
 	"RL": 3
 }
 
-onready var steering_speed_rad = deg2rad(steering_speed_deg)
+onready var steering_speed_rad: float = deg2rad(steering_speed_deg)
 onready var max_steering_angle_rad = deg2rad(max_steering_angle_deg)
 onready var carEngine: CarEngine = get_node(carEngineNode) as CarEngine
 
@@ -106,10 +108,14 @@ var steer_left: bool = false
 var steer_right: bool = false
 var is_jumping: bool = false
 var brake_input: float = 0.0
+var steering_rack_angle: float = 0
 
 func pacejka(x: float, b: float, c: float, d: float, e: float) -> float:
 	var bx = b*x
 	return d * sin(c * atan(bx - e*(bx - atan(bx))))
+	
+func pacejkaFromParams(x: float, normalLoad:float, params: PacejkaParams) -> float:
+	return pacejka(x, params.b, params.c, params.d * normalLoad, params.e)
 	
 func applyWheelForces(wheel: Wheel, state: PhysicsDirectBodyState, totalForce: Vector3):
 	# actually this is the base of the ray case, the point at which the spring connects to the car body
@@ -157,8 +163,12 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 	carEngine.adjust_throttle(state.step)
 	carEngine.update_engine(_get_avg_angular_vel_of_driven_wheels(), state.step)
 	
+	var satPerWheel: Array = []
+	
 	for i in range(4):
-		wheelForces[i] = calcTotalWheelForces(wheels[i], state)
+		var totalForceAndSat = calcTotalWheelForces(wheels[i], state)
+		satPerWheel.push_back(totalForceAndSat.sat)
+		wheelForces[i] = totalForceAndSat.totalForce
 		grounded = grounded && wheels[i].is_colliding()
 		totalForce[i] = wheelForces[i]
 		
@@ -180,10 +190,43 @@ func _integrate_forces(state: PhysicsDirectBodyState):
 #	update_gizmos($RR, get_point_velocity($RR.global_position), wheels[2], 1.0)
 #	update_gizmos($RL, get_point_velocity($RL.global_position), wheels[3], 1.0)
 
-	
+	var totalSatFromWheels: float = 0;
 	
 	for i in range(4):
-		applyWheelForces(wheels[i], state, wheelForces[i])
+		var wheel = wheels[i]
+		applyWheelForces(wheel, state, wheelForces[i])
+		
+		match wheel.name:
+			"FR", "FL":
+#				applySelfAligningForce(wheel, state, satPerWheel[i])
+				totalSatFromWheels += satPerWheel[i] / 2.0 * wheel.calc_moment_of_inertia_about_Y()
+		
+	steering_rack_angle = clamp(steering_rack_angle + totalSatFromWheels * state.step * state.step, -max_steering_angle_rad, max_steering_angle_rad)
+	
+	if !is_equal_approx(steering_rack_angle, 0):
+		var ackerman_angles = _get_front_wheels_ackerman()
+		var left_angle: float = 0
+		var right_angle: float = 0
+		
+		# Turning left
+		if steering_rack_angle < 0:
+			left_angle = ackerman_angles.delta_inner
+			right_angle = ackerman_angles.delta_outer
+		else:
+			right_angle = ackerman_angles.delta_inner
+			left_angle = ackerman_angles.delta_outer
+		
+		var right_wheel = wheels[wheelArrIndex["FR"]]
+		var left_wheel = wheels[wheelArrIndex["FL"]]
+		
+		var right_wheel_rot_change = right_angle - right_wheel.rotation.y
+		var left_wheel_rot_change = left_angle - left_wheel.rotation.y
+		
+		right_wheel.rotate_object_local(right_wheel.transform.basis.y, right_wheel_rot_change)
+		left_wheel.rotate_object_local(left_wheel.transform.basis.y, left_wheel_rot_change)
+		update_wheel_steering_angle(right_wheel.name, rad2deg(right_wheel.rotation.y))
+		update_wheel_steering_angle(left_wheel.name, rad2deg(left_wheel.rotation.y))
+	
 		
 	if is_jumping:
 		state.apply_central_impulse(Vector3.UP * 50)
@@ -215,6 +258,7 @@ func update_gizmos(wheelRayCast: Node, totalForce: Vector3, wheel: Spatial, scal
 
 func _steer_wheels(state: PhysicsDirectBodyState):
 	if steer_right:
+		var rot_change := steering_speed_rad * state.step
 		_rotate_front_wheels(state, -steering_speed_rad)
 	
 	elif steer_left:
@@ -222,17 +266,32 @@ func _steer_wheels(state: PhysicsDirectBodyState):
 	
 func _rotate_front_wheels(state: PhysicsDirectBodyState, rotateSpeed: float):
 	var rotationAngle = rotateSpeed * state.step
-	for i in range(2):
-		var wheel = wheels[i]
-		var new_rot = wheel.rotation.y + rotationAngle
-		
-		if new_rot > max_steering_angle_rad:
-			rotationAngle -= new_rot - max_steering_angle_rad
-		elif new_rot < -max_steering_angle_rad:
-			rotationAngle -= new_rot + max_steering_angle_rad
-		
-		wheel.rotate_object_local(wheel.transform.basis.y, rotationAngle)
-		update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
+	var rot_change := rotateSpeed * state.step
+	
+	steering_rack_angle = clamp(steering_rack_angle + rot_change, -max_steering_angle_rad, max_steering_angle_rad)
+
+func _get_front_wheels_ackerman():
+	var wheel_base = wheels[0].position.z - wheels[3].position.z
+	var track_width = wheels[1].position.x - wheels[0].position.x
+	var numerator = 2 * wheel_base * sin(steering_rack_angle)
+	var delta_inner = atan(numerator / (2 * wheel_base * cos(steering_rack_angle) - track_width * sin(steering_rack_angle)))
+	var delta_outer = atan(numerator / (2 * wheel_base * cos(steering_rack_angle) + track_width * sin(steering_rack_angle)))
+	
+	return {
+		"delta_inner": delta_inner,
+		"delta_outer": delta_outer
+	}
+#	for i in range(2):
+#		var wheel = wheels[i]
+#		var new_rot = wheel.rotation.y + rotationAngle
+#
+#		if new_rot > max_steering_angle_rad:
+#			rotationAngle -= new_rot - max_steering_angle_rad
+#		elif new_rot < -max_steering_angle_rad:
+#			rotationAngle -= new_rot + max_steering_angle_rad
+#
+#		wheel.rotate_object_local(wheel.transform.basis.y, rotationAngle)
+#		update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
 	
 func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	wheel.force_raycast_update()
@@ -243,7 +302,8 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	var mu = 1.0 # on Dry asphalt 0.9-1.2 according to chat GPT
 	var max_trac_force = springForce.length() * mu
 
-	var steerForce = calcSteerForce(wheel, state, max_trac_force)
+	var steerForceAndSat = calcSteerForce(wheel, state, max_trac_force)
+	var steerForce: Vector3 = steerForceAndSat.steer_force
 	
 	var tracForce: Vector3 = Vector3.ZERO
 	var forwardGroundDir = wheel.getProjectedOnGround(transform.basis.xform(wheel.transform.basis.z))
@@ -302,7 +362,8 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	match wheel.name:
 		"FL", "FR":
 #			applySelfAligningForce(wheel, state, steerForce)
-			update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
+#			update_wheel_steering_angle(wheel.name, rad2deg(wheel.rotation.y))
+			pass
 			
 	#if drivenWheels[drivetrain].has(wheel.name):
 		#totalForce += calcEngineForce(wheel, state)
@@ -312,12 +373,18 @@ func calcTotalWheelForces(wheel: Wheel, state: PhysicsDirectBodyState):
 	else:
 		wheel.updateAngularVelNonDriven(brake_input, state.step, tracForce.dot(forwardGroundDir))
 	
-	return totalForce
+	return {
+		"totalForce": totalForce,
+		"sat": steerForceAndSat.sat
+	}
 	
 func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force: float):
 	
 	if !wheel.is_colliding():
-		return Vector3.ZERO
+		return {
+			"steer_force": Vector3.ZERO,
+			"sat": 0
+		}
 	
 	var ws_wheel_location = to_global(wheel.get_wheel_body_space_location())
 	var velocity_at_wheel = get_point_velocity(ws_wheel_location)
@@ -326,7 +393,10 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 	if ground_vel_at_wheel.length() <= 0.3:
 #	if ground_vel_at_wheel.length() <= 0:
 #	if velocity_at_wheel.length() <= 0:
-		return Vector3.ZERO
+		return {
+			"steer_force": Vector3.ZERO,
+			"sat": 0
+		}
 	
 #	var tire_forward_vel = ground_vel_at_wheel.project(wheel.transform.basis.z)
 #	var tire_side_vel = ground_vel_at_wheel.project(wheel.global_transform.basis.x)
@@ -361,7 +431,16 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 	
 #	var steer_force: Vector3 = -steering_vel * mass/4.0 * grip_factor / state.step
 
-	var steer_force: Vector3 = wheel.global_transform.basis.x * pacejka(slip_angle, lat_pacejka.b, lat_pacejka.c, lat_pacejka.d * max_steer_force, lat_pacejka.e)
+	var steer_force_scalar: float = pacejka(slip_angle, lat_pacejka.b, lat_pacejka.c, lat_pacejka.d * max_steer_force, lat_pacejka.e)
+	
+	var trail: float = pacejkaFromParams(abs(slip_angle), 1, forward_sat_pacejka);
+	
+	# Self aligning torque
+	var sat: float = -steer_force_scalar * trail
+	
+#	wheel.rotate_object_local(wheel.transform.basis.y, )
+
+	var steer_force: Vector3 = wheel.global_transform.basis.x * steer_force_scalar
 	
 	var size_before: float = steer_force.length()
 	
@@ -372,67 +451,24 @@ func calcSteerForce(wheel: Wheel, state: PhysicsDirectBodyState, max_steer_force
 #	if wheel.name == "FR" && size_after > 0:
 #		print('Before: %3.0f, After %3.0f, Truncated: %2.0f%%' % [size_before, size_after, (1 - size_after / size_before) * 100.0])
 	
-	return steer_force
+	return {
+		"steer_force": steer_force,
+		"sat": sat
+	}
 	
-func applySelfAligningForce(wheel: Wheel, state: PhysicsDirectBodyState, steer_force: Vector3):
+func applySelfAligningForce(wheel: Wheel, state: PhysicsDirectBodyState, sat: float):
 	# Try using the wheel velocity instead of offset from center
-	var ws_wheel_side_dir = transform.basis.xform(wheel.transform.basis.x)
-	var steer_force_scalar = steer_force.dot(ws_wheel_side_dir)
+#	var ws_wheel_side_dir = transform.basis.xform(wheel.transform.basis.x)
+#	var steer_force_scalar = steer_force.dot(ws_wheel_side_dir)
 	
 #	if wheel.rotation.y != 0:
-	var rot_accel = -self_aligning_coefficient * steer_force_scalar / wheel.calc_moment_of_inertia()
+#	NEED TO Implement acherman steering to link front wheels so thay rotate together instead of independently
+	var rot_accel = sat / wheel.calc_moment_of_inertia_about_Y()
 	var rot_change = rot_accel * pow(state.step, 2)
 	var curr_rot = wheel.rotation.y
 	rot_change = clamp(rot_change, -max_steering_angle_rad + curr_rot, max_steering_angle_rad - curr_rot)
 		
 	wheel.rotate_object_local(wheel.transform.basis.y, rot_change)
-	
-func calcEngineForce(wheel: Wheel, state: PhysicsDirectBodyState):
-	var forwardGroundDir = wheel.getProjectedOnGround(transform.basis.xform(wheel.transform.basis.z))
-	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
-	var currSpeed = forwardGroundSpeed.length()
-	var engForce = Vector3.ZERO
-	
-	if accelerating && currSpeed < maxSpeed:
-		var normalizedSpeed = currSpeed / maxSpeed
-		var acceleration = engineForceCurve.interpolate(normalizedSpeed) * maxEngineForce
-		engForce = forwardGroundDir * acceleration / (mass * 4)
-	
-	updateWheelForceDisplay(wheel.name, engineForce, engForce)
-			
-	return engForce
-		
-func calcRRForce(wheel: Wheel, state: PhysicsDirectBodyState):
-	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
-	var currSpeed = forwardGroundSpeed.length()
-	var retVal
-		
-	if currSpeed > 0 && wheel.is_colliding():
-		retVal = -rr_coefficient * forwardGroundSpeed / state.step * (mass / 4) 
-	else:
-		retVal = Vector3.ZERO
-	
-	#updateWheelForceDisplay(wheel.name, self.rrForce, retVal)
-	
-	return retVal
-		
-func calcBrakingForce(wheel: Wheel, state: PhysicsDirectBodyState):
-	var forwardGroundSpeed = wheel.getProjectedOnGround(state.linear_velocity)
-	var currSpeed = forwardGroundSpeed.length()
-	var brakeForce = Vector3.ZERO
-		
-	if currSpeed > 0 && braking:
-		brakeForce = - brake_coefficient * forwardGroundSpeed * (mass / 4)
-		
-#	match wheel.name:
-#		"FR", "FL":
-#			brakeForce *= 0.3
-#		"RR", "RL":
-#			brakeForce *= 0.7
-	
-	updateWheelForceDisplay(wheel.name, self.brakeForce, brakeForce)
-		
-	return brakeForce
 	
 func adjust_braking():
 	if braking:
@@ -476,6 +512,8 @@ func reset():
 	
 	for wheel in wheels:
 		wheel.angular_vel = 0.0
+		
+	reset_steering()
 	
 	
 	
